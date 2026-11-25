@@ -1,0 +1,149 @@
+{
+  "outil": "DeepSeek Harness dsh (DeepSeek V4.1 Flash, API)",
+  "version_outil": "0.2.2-rc.5",
+  "debut_run": "2026-11-25T21:49:41",
+  "etapes": {
+    "1": {
+      "debut": "21:49:41",
+      "fin": "22:03:35",
+      "duree_s": 835,
+      "tentatives": [
+        {
+          "debut": "21:49:41",
+          "fin": "22:03:35",
+          "duree_s": 835,
+          "code_sortie": 0,
+          "timeout": false,
+          "model_vu": "deepseek-harness",
+          "tours": null,
+          "cout_estime_usd": null,
+          "erreur_outil": null,
+          "evenements": 364,
+          "types_evenements": {
+            "session": 1,
+            "status": 146,
+            "thinking": 72,
+            "text": 2,
+            "tool_call": 71,
+            "tool_result": 71,
+            "final": 1
+          }
+        }
+      ],
+      "relances": 0,
+      "verification": null,
+      "fichiers_presents": true,
+      "termine": true
+    },
+    "2": {
+      "debut": "22:03:35",
+      "fin": "22:24:28",
+      "duree_s": 1253,
+      "tentatives": [
+        {
+          "debut": "22:03:35",
+          "fin": "22:24:28",
+          "duree_s": 1253,
+          "code_sortie": 0,
+          "timeout": false,
+          "model_vu": "deepseek-harness",
+          "tours": null,
+          "cout_estime_usd": null,
+          "erreur_outil": null,
+          "evenements": 352,
+          "types_evenements": {
+            "session": 1,
+            "status": 128,
+            "thinking": 63,
+            "text": 3,
+            "tool_call": 78,
+            "tool_result": 78,
+            "final": 1
+          }
+        }
+      ],
+      "relances": 0,
+      "verification": null,
+      "fichiers_presents": true,
+      "termine": true
+    },
+    "3": {
+      "debut": "22:24:28",
+      "fin": "23:13:06",
+      "duree_s": 2918,
+      "tentatives": [
+        {
+          "debut": "22:24:28",
+          "fin": "23:11:36",
+          "duree_s": 2828,
+          "code_sortie": 0,
+          "timeout": false,
+          "model_vu": "deepseek-ai, deepseek-harness",
+          "tours": null,
+          "cout_estime_usd": null,
+          "erreur_outil": null,
+          "evenements": 1275,
+          "types_evenements": {
+            "session": 1,
+            "status": 414,
+            "thinking": 206,
+            "tool_call": 326,
+            "tool_result": 326,
+            "text": 1,
+            "final": 1
+          }
+        }
+      ],
+      "relances": 0,
+      "verification": {
+        "build": "OK",
+        "test": "OK"
+      },
+      "fichiers_presents": true,
+      "termine": true
+    },
+    "4": {
+      "debut": "23:13:06",
+      "fin": "23:34:19",
+      "duree_s": 1273,
+      "tentatives": [
+        {
+          "debut": "23:13:06",
+          "fin": "23:33:59",
+          "duree_s": 1253,
+          "code_sortie": 0,
+          "timeout": false,
+          "model_vu": "deepseek-harness",
+          "tours": null,
+          "cout_estime_usd": null,
+          "erreur_outil": null,
+          "evenements": 743,
+          "types_evenements": {
+            "session": 1,
+            "status": 256,
+            "thinking": 127,
+            "text": 2,
+            "tool_call": 178,
+            "tool_result": 178,
+            "final": 1
+          }
+        }
+      ],
+      "relances": 0,
+      "verification": {
+        "npm_install": "OK",
+        "build": "OK"
+      },
+      "fichiers_presents": true,
+      "termine": true
+    }
+  },
+  "alertes": [
+    "--dump-config ne montre pas le mod\u00e8le deepseek-flash : le run risque de ne pas utiliser le bon mod\u00e8le",
+    "--dump-config ne montre pas le provider deepseek-official",
+    "reasoningEffort vu dans la config : introuvable (attendu : high)",
+    "MODELE INATTENDU dans les \u00e9v\u00e9nements : deepseek-harness (attendu deepseek-flash)",
+    "MODELE INATTENDU dans les \u00e9v\u00e9nements : deepseek-ai, deepseek-harness (attendu deepseek-flash)"
+  ],
+  "fin_run": "2026-11-25T23:34:19"
+}

@@ -1,0 +1,14 @@
+
+> teamleave-frontend@1.0.0 build
+> tsc --noEmit -p . && vite build
+
+[36mvite v8.3.8 [32mbuilding client environment for production...[36m[39m
+transforming...
+✓ 159 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.50 kB │ gzip:   0.30 kB
+dist/assets/index-DHFZzsMn.css   15.49 kB │ gzip:   3.63 kB
+dist/assets/index-BgHRveC1.js   343.05 kB │ gzip: 105.52 kB
+
+[32m✓ built in 477ms[39m

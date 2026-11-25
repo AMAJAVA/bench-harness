@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Domaine pur : aucune dépendance NuGet, aucune référence de projet (step2_arch §3.3). -->
+</Project>

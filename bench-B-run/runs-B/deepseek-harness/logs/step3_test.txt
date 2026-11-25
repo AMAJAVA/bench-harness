@@ -1,0 +1,9 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  TeamLeave.Domain -> C:\Users\AhmedMAAROUF\bench-B-run\runs-B\deepseek-harness\backend\src\TeamLeave.Domain\bin\Debug\net10.0\TeamLeave.Domain.dll
+  TeamLeave.Application -> C:\Users\AhmedMAAROUF\bench-B-run\runs-B\deepseek-harness\backend\src\TeamLeave.Application\bin\Debug\net10.0\TeamLeave.Application.dll
+  TeamLeave.Infrastructure -> C:\Users\AhmedMAAROUF\bench-B-run\runs-B\deepseek-harness\backend\src\TeamLeave.Infrastructure\bin\Debug\net10.0\TeamLeave.Infrastructure.dll
+  TeamLeave.Domain.Tests -> C:\Users\AhmedMAAROUF\bench-B-run\runs-B\deepseek-harness\backend\tests\TeamLeave.Domain.Tests\bin\Debug\net10.0\TeamLeave.Domain.Tests.dll
+  Run tests: 'C:\Users\AhmedMAAROUF\bench-B-run\runs-B\deepseek-harness\backend\tests\TeamLeave.Domain.Tests\bin\Debug\net10.0\TeamLeave.Domain.Tests.dll' [net10.0|x64]
+  Passed! - Failed: 0, Passed: 67, Skipped: 0, Total: 67, Duration: 4s 093ms - TeamLeave.Domain.Tests.dll (net10.0|x64)
+  Tests succeeded: 'C:\Users\AhmedMAAROUF\bench-B-run\runs-B\deepseek-harness\backend\tests\TeamLeave.Domain.Tests\bin\Debug\net10.0\TeamLeave.Domain.Tests.dll' [net10.0|x64]

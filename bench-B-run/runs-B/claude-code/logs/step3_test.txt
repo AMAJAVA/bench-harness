@@ -1,0 +1,21 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  TeamLeave.Domain -> C:\Users\AhmedMAAROUF\bench-B-run\runs-B\claude-code\backend\src\TeamLeave.Domain\bin\Debug\net10.0\TeamLeave.Domain.dll
+  TeamLeave.Application -> C:\Users\AhmedMAAROUF\bench-B-run\runs-B\claude-code\backend\src\TeamLeave.Application\bin\Debug\net10.0\TeamLeave.Application.dll
+  TeamLeave.Domain.Tests -> C:\Users\AhmedMAAROUF\bench-B-run\runs-B\claude-code\backend\tests\TeamLeave.Domain.Tests\bin\Debug\net10.0\TeamLeave.Domain.Tests.dll
+Test run for C:\Users\AhmedMAAROUF\bench-B-run\runs-B\claude-code\backend\tests\TeamLeave.Domain.Tests\bin\Debug\net10.0\TeamLeave.Domain.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+  TeamLeave.Infrastructure -> C:\Users\AhmedMAAROUF\bench-B-run\runs-B\claude-code\backend\src\TeamLeave.Infrastructure\bin\Debug\net10.0\TeamLeave.Infrastructure.dll
+
+Passed!  - Failed:     0, Passed:    89, Skipped:     0, Total:    89, Duration: 170 ms - TeamLeave.Domain.Tests.dll (net10.0)
+  TeamLeave.Api -> C:\Users\AhmedMAAROUF\bench-B-run\runs-B\claude-code\backend\src\TeamLeave.Api\bin\Debug\net10.0\TeamLeave.Api.dll
+  TeamLeave.ArchitectureTests -> C:\Users\AhmedMAAROUF\bench-B-run\runs-B\claude-code\backend\tests\TeamLeave.ArchitectureTests\bin\Debug\net10.0\TeamLeave.ArchitectureTests.dll
+Test run for C:\Users\AhmedMAAROUF\bench-B-run\runs-B\claude-code\backend\tests\TeamLeave.ArchitectureTests\bin\Debug\net10.0\TeamLeave.ArchitectureTests.dll (.NETCoreApp,Version=v10.0)
+  TeamLeave.IntegrationTests -> C:\Users\AhmedMAAROUF\bench-B-run\runs-B\claude-code\backend\tests\TeamLeave.IntegrationTests\bin\Debug\net10.0\TeamLeave.IntegrationTests.dll
+Test run for C:\Users\AhmedMAAROUF\bench-B-run\runs-B\claude-code\backend\tests\TeamLeave.IntegrationTests\bin\Debug\net10.0\TeamLeave.IntegrationTests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:     6, Skipped:     0, Total:     6, Duration: 115 ms - TeamLeave.ArchitectureTests.dll (net10.0)
+
+Passed!  - Failed:     0, Passed:    78, Skipped:     0, Total:    78, Duration: 44 s - TeamLeave.IntegrationTests.dll (net10.0)

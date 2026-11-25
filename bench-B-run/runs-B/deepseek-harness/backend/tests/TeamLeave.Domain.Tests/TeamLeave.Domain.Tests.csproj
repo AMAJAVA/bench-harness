@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\TeamLeave.Domain\TeamLeave.Domain.csproj" />
+    <ProjectReference Include="..\..\src\TeamLeave.Application\TeamLeave.Application.csproj" />
+    <ProjectReference Include="..\..\src\TeamLeave.Infrastructure\TeamLeave.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

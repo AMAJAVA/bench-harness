@@ -1,0 +1,6 @@
+_prompts/
+run_state.json.bak
+node_modules/
+bin/
+obj/
+dist/

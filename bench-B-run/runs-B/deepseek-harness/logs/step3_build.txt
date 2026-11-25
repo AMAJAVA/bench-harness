@@ -1,0 +1,17 @@
+  Determining projects to restore...
+  Restored C:\Users\AhmedMAAROUF\bench-B-run\runs-B\deepseek-harness\backend\src\TeamLeave.Domain\TeamLeave.Domain.csproj (in 407 ms).
+  Restored C:\Users\AhmedMAAROUF\bench-B-run\runs-B\deepseek-harness\backend\src\TeamLeave.Application\TeamLeave.Application.csproj (in 412 ms).
+  Restored C:\Users\AhmedMAAROUF\bench-B-run\runs-B\deepseek-harness\backend\src\TeamLeave.Api\TeamLeave.Api.csproj (in 1.34 sec).
+  Restored C:\Users\AhmedMAAROUF\bench-B-run\runs-B\deepseek-harness\backend\src\TeamLeave.Infrastructure\TeamLeave.Infrastructure.csproj (in 1.34 sec).
+  Restored C:\Users\AhmedMAAROUF\bench-B-run\runs-B\deepseek-harness\backend\tests\TeamLeave.Domain.Tests\TeamLeave.Domain.Tests.csproj (in 1.49 sec).
+  TeamLeave.Domain -> C:\Users\AhmedMAAROUF\bench-B-run\runs-B\deepseek-harness\backend\src\TeamLeave.Domain\bin\Debug\net10.0\TeamLeave.Domain.dll
+  TeamLeave.Application -> C:\Users\AhmedMAAROUF\bench-B-run\runs-B\deepseek-harness\backend\src\TeamLeave.Application\bin\Debug\net10.0\TeamLeave.Application.dll
+  TeamLeave.Infrastructure -> C:\Users\AhmedMAAROUF\bench-B-run\runs-B\deepseek-harness\backend\src\TeamLeave.Infrastructure\bin\Debug\net10.0\TeamLeave.Infrastructure.dll
+  TeamLeave.Domain.Tests -> C:\Users\AhmedMAAROUF\bench-B-run\runs-B\deepseek-harness\backend\tests\TeamLeave.Domain.Tests\bin\Debug\net10.0\TeamLeave.Domain.Tests.dll
+  TeamLeave.Api -> C:\Users\AhmedMAAROUF\bench-B-run\runs-B\deepseek-harness\backend\src\TeamLeave.Api\bin\Debug\net10.0\TeamLeave.Api.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:37.14
