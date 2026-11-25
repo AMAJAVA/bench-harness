@@ -1,0 +1,26 @@
+{
+  "model": "Claude Opus 5.5",
+  "model_id_envoyé": "claude-opus-5-5",
+  "réglages": {
+    "effort": "high",
+    "sampling": "omis (temperature/top_p/top_k rejetés par Opus 5.5)"
+  },
+  "base_tarifaire": "24 nov. 2026",
+  "plafond_usd": 8.0,
+  "started": "20261124-162806",
+  "steps": {
+    "1": {
+      "latency_s": 443.8,
+      "cost_usd": 1.05696,
+      "coût_cumulé_usd": 1.057,
+      "reported_model": "claude-opus-5-5",
+      "stop_reason": "end_turn",
+      "input_tokens": 1160,
+      "output_tokens": 52616
+    },
+    "2": {
+      "error": "troncature : sortie tronquée (stop_reason=max_tokens, 64000 tokens)"
+    }
+  },
+  "coût_total_usd": 1.057
+}

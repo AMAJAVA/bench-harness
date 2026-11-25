@@ -1,0 +1,41 @@
+{
+  "model": "Claude Opus 5.5",
+  "model_id_envoye": "claude-opus-5-5",
+  "reglages": {
+    "effort": "high",
+    "sampling": "omis (temperature/top_p/top_k rejetes par Opus 5.5)"
+  },
+  "base_tarifaire": "24 nov. 2026",
+  "plafond_usd": 8.0,
+  "started": "20261125-102944",
+  "resume_from": "runs/opus/20261124-162806",
+  "steps": {
+    "1": {
+      "reutilise_de": "runs\\opus\\20261124-162806\\step1_spec.md"
+    },
+    "2": {
+      "cost_usd": 2.355776,
+      "cout_cumule_usd": 2.3558,
+      "latency_s": 950.4,
+      "input_tokens": 37084,
+      "output_tokens": 110372,
+      "continuations": 0,
+      "reported_model": "claude-opus-5-5",
+      "appels": [
+        {
+          "reported_model": "claude-opus-5-5",
+          "stop_reason": "end_turn",
+          "input_tokens": 37084,
+          "output_tokens": 110372,
+          "cost_usd": 2.355776,
+          "latency_s": 950.4,
+          "attempt": 1
+        }
+      ]
+    },
+    "3": {
+      "error": "pire cas estim\u00e9 2.82$ > reste du plafond (5.28 cumul\u00e9s / 8.00)"
+    }
+  },
+  "cout_total_usd": 5.2848
+}

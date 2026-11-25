@@ -1,0 +1,69 @@
+{
+  "model": "DeepSeek V4.1 Flash",
+  "model_id_envoye": "deepseek-flash",
+  "reglages": {
+    "temperature": 0.0,
+    "reasoning_effort": "high"
+  },
+  "base_tarifaire": "24 nov. 2026",
+  "plafond_usd": 3.0,
+  "started": "20261125-110753",
+  "resume_from": "runs/flash/20261124-164530",
+  "steps": {
+    "1": {
+      "reutilise_de": "runs\\flash\\20261124-164530\\step1_spec.md"
+    },
+    "2": {
+      "reutilise_de": "runs\\flash\\20261124-164530\\step2_arch.md"
+    },
+    "3": {
+      "cost_usd": 0.043932,
+      "cout_cumule_usd": 0.0439,
+      "latency_s": 324.1,
+      "input_tokens": 22343,
+      "output_tokens": 73060,
+      "continuations": 0,
+      "reported_model": "deepseek-flash",
+      "appels": [
+        {
+          "reported_model": "deepseek-flash",
+          "finish_reason": "stop",
+          "input_tokens": 22343,
+          "output_tokens": 73060,
+          "cache_hit_tokens": 22144,
+          "cache_miss_tokens": 199,
+          "price_tier": "offpeak",
+          "cost_usd": 0.043932,
+          "latency_s": 324.1,
+          "attempt": 1
+        }
+      ],
+      "files_extracted": 64
+    },
+    "4": {
+      "cost_usd": 0.041112,
+      "cout_cumule_usd": 0.085,
+      "latency_s": 300.8,
+      "input_tokens": 22320,
+      "output_tokens": 62940,
+      "continuations": 0,
+      "reported_model": "deepseek-flash",
+      "appels": [
+        {
+          "reported_model": "deepseek-flash",
+          "finish_reason": "stop",
+          "input_tokens": 22320,
+          "output_tokens": 62940,
+          "cache_hit_tokens": 0,
+          "cache_miss_tokens": 22320,
+          "price_tier": "offpeak",
+          "cost_usd": 0.041112,
+          "latency_s": 300.8,
+          "attempt": 1
+        }
+      ],
+      "files_extracted": 29
+    }
+  },
+  "cout_total_usd": 0.085
+}

@@ -1,0 +1,41 @@
+{
+  "model": "DeepSeek V4.1 Flash",
+  "model_id_envoyé": "deepseek-flash",
+  "réglages": {
+    "temperature": 0.0,
+    "reasoning_effort": "high"
+  },
+  "base_tarifaire": "24 nov. 2026",
+  "plafond_usd": 8.0,
+  "started": "20261124-164530",
+  "steps": {
+    "1": {
+      "latency_s": 112.8,
+      "cost_usd": 0.014432,
+      "coût_cumulé_usd": 0.0144,
+      "reported_model": "deepseek-flash",
+      "finish_reason": "stop",
+      "input_tokens": 809,
+      "output_tokens": 23851,
+      "cache_hit_tokens": 0,
+      "cache_miss_tokens": 809,
+      "price_tier": "offpeak"
+    },
+    "2": {
+      "latency_s": 144.3,
+      "cost_usd": 0.016802,
+      "coût_cumulé_usd": 0.0312,
+      "reported_model": "deepseek-flash",
+      "finish_reason": "stop",
+      "input_tokens": 10630,
+      "output_tokens": 25345,
+      "cache_hit_tokens": 0,
+      "cache_miss_tokens": 10630,
+      "price_tier": "offpeak"
+    },
+    "3": {
+      "error": "troncature : sortie tronquée (finish_reason=length, 64000 tokens)"
+    }
+  },
+  "coût_total_usd": 0.0312
+}
