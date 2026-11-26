@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TeamLeave, analyse critique des deux rapports</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Plan : dossier d'analyse sombre, une seule colonne de lecture (1040px).
+     Bleu = Claude Opus 5.5, orange = DeepSeek V4.1 Flash (comme les figures du rapport). Les couleurs de statut ne servent qu'aux pastilles. */
+  color-scheme: dark;
+  --page: #0b0b0b;
+  --surface: #191919;
+  --raise: #222222;
+  --ink: #efefef;
+  --ink-2: #9c9c9c;
+  --line: #303030;
+  --axis: #474747;
+  --edge: rgba(255, 255, 255, 0.10);
+  --blue: #338ced;
+  --orange: #e76624;
+  --good: #0aac23;
+  --warn: #fbb315;
+  --serious: #f18a59;
+  --critical: #dc3c3d;
+  --mute: #6b6b6b;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-padding-top: 72px; }
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font: 400 16px/1.6 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--blue); text-underline-offset: 3px; }
+a:hover { color: #6aabf1; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 4px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; font-weight: 600; letter-spacing: -0.01em; }
+p { margin: 0; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+.mono { font-family: var(--mono); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* barre de navigation */
+.nav { position: sticky; top: 0; z-index: 20; background: rgba(11, 11, 11, 0.88); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.nav .wrap { display: flex; gap: 4px 20px; align-items: center; flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; }
+.nav b { font: 500 12px/1 var(--mono); color: var(--ink-2); letter-spacing: 0.06em; text-transform: uppercase; margin-right: auto; }
+.nav a { font-size: 14px; color: var(--ink-2); text-decoration: none; padding: 4px 2px; }
+.nav a:hover { color: var(--ink); }
+
+/* en-tête */
+header.top { padding: 56px 0 28px; }
+.eyebrow { font: 500 12px/1.4 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+h1 { font-size: clamp(30px, 4.6vw, 48px); line-height: 1.1; margin-top: 14px; max-width: 20ch; }
+.lede { margin-top: 18px; color: var(--ink-2); max-width: 64ch; font-size: 17px; }
+.verdict { margin-top: 26px; max-width: 68ch; font-size: 18px; line-height: 1.55; }
+
+/* pastilles de statut : icône + libellé, jamais la couleur seule */
+.pill { display: inline-flex; align-items: center; gap: 7px; font: 500 12px/1 var(--sans); padding: 6px 10px 6px 8px; border-radius: 999px; background: var(--raise); border: 1px solid var(--edge); color: var(--ink); white-space: nowrap; }
+.pill svg { width: 14px; height: 14px; flex: none; }
+.k-erreur { --c: var(--critical); }
+.k-nuancer { --c: var(--serious); }
+.k-angle { --c: var(--warn); }
+.k-ok { --c: var(--good); }
+.pill svg circle { fill: var(--c); }
+.pill svg path { stroke: #0b0b0b; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* tuiles de chiffres */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin-top: 34px; }
+.tile { background: var(--surface); border: 1px solid var(--edge); border-radius: 10px; padding: 18px 18px 16px; display: flex; flex-direction: column; gap: 10px; }
+.tile .val { font-size: 44px; font-weight: 600; line-height: 1; letter-spacing: -0.02em; }
+.tile p { color: var(--ink-2); font-size: 14px; line-height: 1.5; }
+.tile p b { color: var(--ink); font-weight: 500; }
+.tile .pill { align-self: flex-start; }
+
+/* sections */
+section { padding: 56px 0 8px; }
+.sec-head { max-width: 70ch; margin-bottom: 26px; }
+.sec-head h2 { font-size: clamp(24px, 3vw, 32px); line-height: 1.2; }
+.sec-head p { margin-top: 12px; color: var(--ink-2); }
+.num { font: 500 12px/1 var(--mono); color: var(--ink-2); letter-spacing: 0.08em; display: block; margin-bottom: 12px; text-transform: uppercase; }
+
+/* schémas */
+.figs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+figure { margin: 0; background: var(--surface); border: 1px solid var(--edge); border-radius: 10px; padding: 16px 16px 14px; min-width: 0; }
+figure h3 { font-size: 15px; margin-bottom: 4px; }
+figure .sub { font: 500 12px/1.4 var(--mono); color: var(--ink-2); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 10px; }
+.scroll-x { overflow-x: auto; }
+svg.diag { display: block; width: 100%; min-width: 440px; height: auto; color: var(--ink-2); }
+svg text { font-family: var(--sans); }
+.t-main { fill: var(--ink); font-size: 13px; font-weight: 600; }
+.t-sub { fill: var(--ink-2); font-size: 11px; }
+.t-edge { fill: var(--ink-2); font-size: 11px; }
+.node { fill: var(--raise); stroke: var(--axis); stroke-width: 1.5; }
+.node.cheap { stroke: var(--blue); }
+.node.strong { stroke: var(--orange); }
+.edge { fill: none; stroke: currentColor; stroke-width: 1.5; }
+figcaption { margin-top: 12px; font-size: 14px; color: var(--ink-2); line-height: 1.5; }
+.diag-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-top: 16px; color: var(--ink-2); font-size: 14px; }
+.dot-key { display: inline-flex; align-items: center; gap: 7px; }
+.dot-key i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.btn { font: 500 14px/1 var(--sans); color: var(--ink); background: var(--raise); border: 1px solid var(--edge); border-radius: 8px; padding: 9px 13px; cursor: pointer; }
+.btn:hover { border-color: var(--axis); background: #292929; }
+.btn[aria-pressed="true"] { border-color: var(--blue); background: rgba(51, 140, 237, 0.14); }
+.takeaway { margin-top: 18px; max-width: 68ch; }
+
+/* constats */
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; align-items: center; }
+.filters .count { margin-left: auto; color: var(--ink-2); font-size: 14px; }
+.list { display: grid; gap: 12px; }
+.item { background: var(--surface); border: 1px solid var(--edge); border-left: 4px solid var(--c); border-radius: 10px; padding: 16px 18px 16px 16px; display: grid; gap: 10px; }
+.item[hidden] { display: none; }
+.item h3 { font-size: 17px; line-height: 1.35; font-weight: 600; }
+.item .row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-start; justify-content: space-between; }
+.item dl { margin: 0; display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 6px 16px; font-size: 15px; }
+.item dt { color: var(--ink-2); font-size: 13px; padding-top: 2px; }
+.item dd { margin: 0; max-width: 78ch; }
+
+/* simulateur */
+.sim { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 16px; align-items: start; }
+.card { background: var(--surface); border: 1px solid var(--edge); border-radius: 10px; padding: 18px; }
+.controls { display: grid; gap: 20px; }
+.ctl label { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; margin-bottom: 8px; }
+.ctl label output { font: 500 14px/1.2 var(--mono); color: var(--ink); white-space: nowrap; }
+.ctl .hint { font-size: 13px; color: var(--ink-2); margin-top: 6px; line-height: 1.45; }
+input[type="range"] { width: 100%; accent-color: var(--blue); height: 28px; margin: 0; }
+.presets { display: flex; flex-wrap: wrap; gap: 8px; }
+.formula { font: 500 13px/1.5 var(--mono); background: var(--raise); border: 1px solid var(--edge); border-radius: 8px; padding: 12px 14px; color: var(--ink); overflow-x: auto; white-space: nowrap; }
+.assume { font-size: 13px; color: var(--ink-2); line-height: 1.5; }
+.out { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 14px; }
+.out .tile { padding: 14px 16px; }
+.out .val { font-size: 32px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 14px; color: var(--ink-2); margin-bottom: 8px; }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.legend i { width: 16px; height: 2px; display: inline-block; border-radius: 2px; }
+.legend em { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--blue); box-shadow: 0 0 0 2px var(--surface); font-style: normal; }
+.chartwrap { position: relative; }
+.chartwrap svg { display: block; width: 100%; height: auto; }
+.chartwrap svg text { fill: var(--ink-2); font-size: 12px; }
+.chartwrap svg .lbl { fill: var(--ink); }
+.tip { position: absolute; top: 6px; pointer-events: none; background: #101010; border: 1px solid var(--axis); border-radius: 8px; padding: 9px 11px; font-size: 13px; line-height: 1.45; min-width: 150px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45); z-index: 3; }
+.tip[hidden] { display: none; }
+.tip-h { color: var(--ink-2); font-size: 12px; margin-bottom: 4px; }
+.tip-r { display: grid; grid-template-columns: 16px auto 1fr; align-items: center; gap: 8px; }
+.tip-k { display: block; height: 2px; border-radius: 2px; }
+.tip-r strong { font-weight: 600; }
+.tip-n { color: var(--ink-2); font-size: 12px; }
+.chart-foot { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; margin-top: 10px; }
+.chart-foot p { font-size: 13px; color: var(--ink-2); max-width: 60ch; }
+.tbl-wrap { overflow-x: auto; margin-top: 12px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: right; padding: 8px 12px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--ink-2); font-weight: 500; font-size: 13px; }
+tr.hl td { color: var(--ink); background: rgba(51, 140, 237, 0.10); }
+
+/* vision */
+.vision-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 16px; align-items: stretch; }
+.hero { background: var(--surface); border: 1px solid var(--edge); border-radius: 10px; padding: 26px 24px; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
+.hero .big { font-size: clamp(56px, 8vw, 84px); font-weight: 600; letter-spacing: -0.03em; line-height: 1; }
+.hero p { color: var(--ink-2); max-width: 36ch; }
+.principles { display: grid; gap: 12px; }
+.principles .card h3 { font-size: 16px; margin-bottom: 6px; }
+.principles .card p { color: var(--ink-2); font-size: 15px; }
+.steps { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 0; counter-reset: s; }
+.steps li { position: relative; padding: 0 0 22px 52px; }
+.steps li::before { counter-increment: s; content: counter(s, decimal); position: absolute; left: 0; top: 0; width: 34px; height: 34px; border-radius: 50%; background: var(--raise); border: 1px solid var(--axis); display: grid; place-items: center; font: 500 14px/1 var(--mono); }
+.steps li::after { content: ""; position: absolute; left: 17px; top: 38px; bottom: 4px; width: 1px; background: var(--line); }
+.steps li:last-child::after { display: none; }
+.steps h3 { font-size: 17px; margin-bottom: 4px; padding-top: 5px; }
+.steps p { color: var(--ink-2); max-width: 70ch; }
+.closing { margin-top: 8px; max-width: 70ch; }
+
+/* limites et sources */
+ul.plain { margin: 0; padding-left: 20px; display: grid; gap: 10px; max-width: 74ch; }
+ul.plain li::marker { color: var(--ink-2); }
+.sources { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.sources li { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 4px 16px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+.sources li > span { color: var(--ink-2); font-size: 13px; padding-top: 2px; }
+footer { margin-top: 56px; padding: 26px 0 48px; border-top: 1px solid var(--line); color: var(--ink-2); font-size: 14px; }
+
+@media (max-width: 860px) {
+  .figs, .sim, .vision-top { grid-template-columns: minmax(0, 1fr); }
+  .item dl { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .item dd { margin-bottom: 8px; }
+  .sources li { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 480px) {
+  header.top { padding-top: 36px; }
+  .tile .val { font-size: 38px; }
+  .nav b { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { transition: none !important; }
+}
+
+
+/* ajouts propres à cette page : bleu = Claude, orange = DeepSeek (comme les figures du rapport) */
+.t-claude { fill: var(--blue); font-size: 12px; font-weight: 600; }
+.t-ds { fill: var(--orange); font-size: 12px; font-weight: 600; }
+.node.claude { stroke: var(--blue); }
+.node.ds { stroke: var(--orange); }
+.tag { fill: none; stroke: var(--axis); stroke-width: 1; stroke-dasharray: 3 3; }
+.mark circle { fill: var(--warn); stroke: #191919; stroke-width: 2; }
+.mark text { fill: #0b0b0b; font-size: 12px; font-weight: 700; text-anchor: middle; }
+figure.wide { padding: 16px 16px 14px; }
+.frag { list-style: none; margin: 18px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px 28px; counter-reset: f; }
+.frag li { position: relative; padding-left: 36px; color: var(--ink-2); font-size: 15px; line-height: 1.5; }
+.frag li b { color: var(--ink); font-weight: 500; }
+.frag li::before { counter-increment: f; content: counter(f); position: absolute; left: 0; top: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--warn); color: #0b0b0b; font: 700 12px/24px var(--sans); text-align: center; }
+
+.sub-h { font-size: 18px; margin: 40px 0 6px; }
+.sub-p { color: var(--ink-2); max-width: 70ch; margin-bottom: 14px; }
+.matrix-card { background: var(--surface); border: 1px solid var(--edge); border-radius: 10px; padding: 6px 8px 10px; }
+.matrix { min-width: 760px; }
+.matrix th, .matrix td { text-align: left; vertical-align: top; padding: 12px 12px; }
+.matrix td:first-child { font-weight: 500; min-width: 170px; }
+.matrix tr:last-child td { border-bottom: 0; }
+.matrix td .note { display: block; color: var(--ink-2); font-size: 13px; line-height: 1.4; margin-top: 7px; max-width: 34ch; }
+.matrix td.rep { color: var(--ink-2); font-size: 13px; max-width: 24ch; }
+.st { display: inline-flex; align-items: center; gap: 6px; font: 500 12px/1 var(--sans); padding: 5px 9px 5px 7px; border-radius: 999px; background: var(--raise); border: 1px solid var(--edge); color: var(--ink); white-space: nowrap; }
+.st svg { width: 13px; height: 13px; flex: none; }
+.st svg circle { fill: var(--c); }
+.st svg path { stroke: #0b0b0b; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.s-vu, .s-api { --c: var(--good); }
+.s-tests { --c: var(--warn); }
+.s-code, .s-copie { --c: var(--serious); }
+.s-non { --c: #8a8a8a; }
+.s-contra { --c: var(--critical); }
+
+.who { display: flex; align-items: center; gap: 8px; }
+.who i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
+.tile .sm { font-size: 13px; color: var(--ink-2); }
+.wf-legend { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 14px; color: var(--ink-2); margin-bottom: 10px; }
+.wf-legend span { display: inline-flex; align-items: center; gap: 8px; }
+.wf-legend i { width: 14px; height: 10px; border-radius: 3px; display: inline-block; }
+.two { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.two .card p + p { margin-top: 12px; }
+.two .card p { color: var(--ink-2); font-size: 15px; }
+.two .card p b { color: var(--ink); font-weight: 500; }
+@media (max-width: 860px) { .two { grid-template-columns: minmax(0, 1fr); } }
+
+#svgP { min-width: 820px; }
+
+.out { grid-template-columns: repeat(auto-fit, minmax(138px, 1fr)); }
+.out .val { font-size: 30px; }
+
+@media (max-width: 600px) {
+  #chart text { font-size: 15px; }
+  #wf { min-width: 620px; }
+}
+
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="Sections">
+  <div class="wrap">
+    <b>Analyse critique</b>
+    <a href="#verdict">Verdict</a>
+    <a href="#preuves">Preuves</a>
+    <a href="#constats">Constats</a>
+    <a href="#bascule">Bascule</a>
+    <a href="#simulateur">Simulateur</a>
+    <a href="#vision">Ma vision</a>
+    <a href="#sources">Sources</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<header class="top" id="verdict">
+  <p class="eyebrow">Analyse critique · 26 nov. 2026</p>
+  <h1>TeamLeave : ce que les deux rapports prouvent vraiment</h1>
+  <p class="lede">Revue du rapport de notation (v3, 16 pages) et de la comparaison fonctionnelle et UX (v2, 13 pages) du montage B, Claude Opus 5.5 contre DeepSeek V4.1 Flash : calculs refaits, cohérence entre les deux documents, faits externes recoupés, puis ma vision.</p>
+  <p class="verdict">Les chiffres tiennent : j'ai refait les calculs, ils sont exacts, et la cause du bug est la bonne. Ce sont les conclusions qui sont plus fragiles que le ton. « Toutes les écritures échouent » est observé pour 2 écritures sur 5. L'avantage de 3 points de Claude change de signe dès que le coût pèse plus de 6,5 % de la grille, contre 3,75 % ici. Et les deux applications n'ont pas tourné sur le même moteur de base de données. La leçon solide est ailleurs : des tests unitaires verts ne valent pas une application qui fonctionne.</p>
+
+  <div class="tiles">
+    <div class="tile k-ok">
+      <span class="pill k-ok"><svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="7"/><path d="M4 7.4l2 2 4-4.4"/></svg>Confirmé</span>
+      <div class="val">88,9</div>
+      <p><b>pour Claude, contre 85,9 pour DeepSeek : recalculés à l'identique</b> (88,85 et 85,92), de même que les moyennes, les durées et le ratio de coût.</p>
+    </div>
+    <div class="tile k-nuancer">
+      <span class="pill k-nuancer"><svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="7"/><path d="M7 3.8v3.6M7 9.6v.2"/></svg>À nuancer</span>
+      <div class="val">2 sur 5</div>
+      <p><b>écritures vues en échec telles que livrées</b> (envoi, ajustement de solde). Approbation, refus et annulation sont déduits du code.</p>
+    </div>
+    <div class="tile k-nuancer">
+      <span class="pill k-nuancer"><svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="7"/><path d="M7 3.8v3.6M7 9.6v.2"/></svg>À nuancer</span>
+      <div class="val">6,5&nbsp;%</div>
+      <p><b>poids du critère coût à partir duquel DeepSeek passe devant.</b> La grille lui donne 3,75&nbsp;%.</p>
+    </div>
+    <div class="tile k-angle">
+      <span class="pill k-angle"><svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="7"/><path d="M7 3.8v3.6M7 9.6v.2"/></svg>Angle mort</span>
+      <div class="val">≈&nbsp;30×</div>
+      <p><b>est surtout le ratio des tarifs catalogue</b> (27× à 33× selon le poste), pas un gain d'efficacité mesuré.</p>
+    </div>
+  </div>
+</header>
+
+<section id="preuves" aria-labelledby="h-prev">
+  <div class="sec-head">
+    <span class="num">01 · Preuves</span>
+    <h2 id="h-prev">Une chaîne de mesure à cinq points faibles</h2>
+    <p>Le protocole est propre sur le papier : même brief, quatre étapes, zéro correction manuelle. Mais entre le run et le score, plusieurs maillons reposent sur un seul essai, une IA, ou un environnement différent. Les cinq pastilles de la figure sont détaillées dessous.</p>
+  </div>
+
+  <figure class="wide">
+    <p class="sub">Montage B</p>
+    <h3>Du brief au score</h3>
+    <div class="scroll-x">
+      <svg class="diag" id="svgP" viewBox="0 0 1000 300" role="img" aria-label="Le brief TeamLeave est confié à Claude Opus 5.5 (base SQLite) et à DeepSeek V4.1 Flash (base PostgreSQL 14), chacun en quatre étapes : spécification, architecture, backend, frontend. Un premier évaluateur IA note les livrables, un second évaluateur IA exécute les applications, puis une grille additive produit le score.">
+        <defs>
+          <marker id="ahp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+        </defs>
+
+        <text class="t-claude" x="160" y="34">Claude Opus 5.5 · Claude Code</text>
+        <text class="t-ds" x="160" y="200">DeepSeek V4.1 Flash · dsh</text>
+
+        <rect class="node" x="10" y="122" width="100" height="56" rx="6"/>
+        <text class="t-main" x="60" y="146" text-anchor="middle">Brief</text>
+        <text class="t-sub" x="60" y="163" text-anchor="middle">TeamLeave</text>
+
+        <path class="edge" d="M110,150 C136,150 136,61 157,61" marker-end="url(#ahp)"/>
+        <path class="edge" d="M110,150 C136,150 136,227 157,227" marker-end="url(#ahp)"/>
+
+        <path class="edge" d="M236,61 L249,61" marker-end="url(#ahp)"/>
+        <path class="edge" d="M328,61 L341,61" marker-end="url(#ahp)"/>
+        <path class="edge" d="M420,61 L433,61" marker-end="url(#ahp)"/>
+        <path class="edge" d="M236,227 L249,227" marker-end="url(#ahp)"/>
+        <path class="edge" d="M328,227 L341,227" marker-end="url(#ahp)"/>
+        <path class="edge" d="M420,227 L433,227" marker-end="url(#ahp)"/>
+
+        <rect class="node claude" x="160" y="44" width="76" height="34" rx="6"/><text class="t-main" x="198" y="66" text-anchor="middle">Spéc.</text>
+        <rect class="node claude" x="252" y="44" width="76" height="34" rx="6"/><text class="t-main" x="290" y="66" text-anchor="middle">Archi.</text>
+        <rect class="node claude" x="344" y="44" width="76" height="34" rx="6"/><text class="t-main" x="382" y="66" text-anchor="middle">Backend</text>
+        <rect class="node claude" x="436" y="44" width="76" height="34" rx="6"/><text class="t-main" x="474" y="66" text-anchor="middle">Frontend</text>
+        <rect class="tag" x="334" y="88" width="96" height="22" rx="11"/><text class="t-sub" x="382" y="103" text-anchor="middle">SQLite</text>
+
+        <rect class="node ds" x="160" y="210" width="76" height="34" rx="6"/><text class="t-main" x="198" y="232" text-anchor="middle">Spéc.</text>
+        <rect class="node ds" x="252" y="210" width="76" height="34" rx="6"/><text class="t-main" x="290" y="232" text-anchor="middle">Archi.</text>
+        <rect class="node ds" x="344" y="210" width="76" height="34" rx="6"/><text class="t-main" x="382" y="232" text-anchor="middle">Backend</text>
+        <rect class="node ds" x="436" y="210" width="76" height="34" rx="6"/><text class="t-main" x="474" y="232" text-anchor="middle">Frontend</text>
+        <rect class="tag" x="334" y="254" width="96" height="22" rx="11"/><text class="t-sub" x="382" y="269" text-anchor="middle">PostgreSQL 14</text>
+
+        <path class="edge" d="M512,61 C545,61 545,150 567,150" marker-end="url(#ahp)"/>
+        <path class="edge" d="M512,227 C545,227 545,150 567,150" marker-end="url(#ahp)"/>
+
+        <rect class="node" x="570" y="122" width="140" height="56" rx="6"/>
+        <text class="t-main" x="640" y="146" text-anchor="middle">Évaluateur IA n°1</text>
+        <text class="t-sub" x="640" y="163" text-anchor="middle">notes · aveugle partiel</text>
+        <path class="edge" d="M710,150 L737,150" marker-end="url(#ahp)"/>
+        <rect class="node" x="740" y="122" width="140" height="56" rx="6"/>
+        <text class="t-main" x="810" y="146" text-anchor="middle">Évaluateur IA n°2</text>
+        <text class="t-sub" x="810" y="163" text-anchor="middle">exécution · captures</text>
+        <path class="edge" d="M880,150 L902,150" marker-end="url(#ahp)"/>
+        <rect class="node" x="905" y="122" width="90" height="56" rx="6"/>
+        <text class="t-main" x="950" y="146" text-anchor="middle">Grille</text>
+        <text class="t-sub" x="950" y="163" text-anchor="middle">score /100</text>
+
+        <g class="mark"><circle cx="104" cy="120" r="11"/><text x="104" y="124">1</text></g>
+        <g class="mark"><circle cx="440" cy="99" r="11"/><text x="440" y="103">2</text></g>
+        <g class="mark"><circle cx="440" cy="265" r="11"/><text x="440" y="269">2</text></g>
+        <g class="mark"><circle cx="704" cy="120" r="11"/><text x="704" y="124">3</text></g>
+        <g class="mark"><circle cx="874" cy="120" r="11"/><text x="874" y="124">4</text></g>
+        <g class="mark"><circle cx="989" cy="120" r="11"/><text x="989" y="124">5</text></g>
+      </svg>
+    </div>
+    <figcaption>Un seul essai par modèle, zéro correction manuelle. Les points 3 et 4 sont deux évaluateurs IA successifs : le premier note les livrables, le second exécute les applications et sert à réévaluer.</figcaption>
+    <div class="diag-bar">
+      <span class="dot-key"><i style="background:var(--blue)"></i>run de Claude</span>
+      <span class="dot-key"><i style="background:var(--orange)"></i>run de DeepSeek</span>
+      <button class="btn" id="pauseBtn" type="button" aria-pressed="false">Mettre l'animation en pause</button>
+    </div>
+    <ol class="frag">
+      <li><b>Un seul essai par modèle.</b> Aucune mesure de variance : le rapport le dit lui-même.</li>
+      <li><b>Deux moteurs de base différents.</b> SQLite pour Claude, PostgreSQL 14 pour DeepSeek (le projet vise la 17).</li>
+      <li><b>Notation par une IA, aveugle partiel.</b> L'origine de chaque dossier restait visible dans les chemins.</li>
+      <li><b>Exécution par une seconde IA, sans relecture humaine.</b> Le correctif d'une ligne n'a été testé que sur une copie.</li>
+      <li><b>Grille additive.</b> Le coût pèse 3,75 %, et aucun seuil d'acceptation ne distingue une application qui marche d'une qui échoue.</li>
+    </ol>
+  </figure>
+
+  <h3 class="sub-h">Vu, déduit ou non testé</h3>
+  <p class="sub-p">Le résumé du rapport affirme que l'application DeepSeek échoue sur « toutes les écritures ». En croisant avec la comparaison UX, voici ce qui a réellement été observé, fonction par fonction.</p>
+  <div class="matrix-card">
+    <div class="tbl-wrap" id="matrixWrap"></div>
+  </div>
+</section>
+
+<section id="constats" aria-labelledby="h-cons">
+  <div class="sec-head">
+    <span class="num">02 · Constats</span>
+    <h2 id="h-cons">Constat par constat</h2>
+    <p>Chaque ligne indique ce que disent les documents, puis ce que montrent les recoupements. Les erreurs viennent en premier, les points confirmés en dernier.</p>
+  </div>
+  <div class="filters" role="group" aria-label="Filtrer les constats">
+    <button class="btn" type="button" data-f="all" aria-pressed="true">Tout</button>
+    <button class="btn" type="button" data-f="erreur" aria-pressed="false">Erreur</button>
+    <button class="btn" type="button" data-f="nuancer" aria-pressed="false">À nuancer</button>
+    <button class="btn" type="button" data-f="angle" aria-pressed="false">Angles morts</button>
+    <button class="btn" type="button" data-f="ok" aria-pressed="false">Confirmé</button>
+    <span class="count" id="count" aria-live="polite"></span>
+  </div>
+  <div class="list" id="list"></div>
+</section>
+
+<section id="bascule" aria-labelledby="h-bas">
+  <div class="sec-head">
+    <span class="num">03 · Bascule</span>
+    <h2 id="h-bas">Ce qui a retourné le classement entre la v2 et la v3</h2>
+    <p>Avant l'exécution de bout en bout, DeepSeek était devant de 1 point. Après, Claude l'est de 2,9. Cinq notes ont changé. Voici la part de chacune dans l'écart de score, en points sur 100.</p>
+  </div>
+  <div class="two">
+    <div class="card">
+      <div class="wf-legend">
+        <span><i style="background:var(--blue)"></i>pousse l'écart vers Claude</span>
+        <span><i style="background:var(--orange)"></i>pousse l'écart vers DeepSeek</span>
+        <span><i style="background:#6b6b6b"></i>écart total</span>
+      </div>
+      <div class="scroll-x">
+        <div class="chartwrap">
+          <svg id="wf" viewBox="0 0 760 384" role="img" aria-label="Décomposition de la bascule du classement entre la version 2 et la version 3 du rapport."></svg>
+        </div>
+      </div>
+      <div class="sr-only"><table id="wfTable"></table></div>
+    </div>
+    <div class="card">
+      <p><b>Deux notes de DeepSeek, C3 et C4, font 4,0 points sur une bascule de 3,9.</b> Elles viennent du même bug, relu par un autre agent IA.</p>
+      <p>Si C4 était restée à 4,5, l'écart serait de 1,4 point : l'avantage de Claude serait divisé par deux. Le rapport écarte le double comptage pour C5 et D2, pas entre C3 et C4.</p>
+      <p>Les deux notes de D3 (mobile) poussent ensemble vers DeepSeek, de 0,6 point en tout. La note C3 de Claude gagne 0,5 point pour des fonctions vues à l'écran, alors que l'administration et l'annulation ne l'ont pas été.</p>
+    </div>
+  </div>
+</section>
+
+<section id="simulateur" aria-labelledby="h-sim">
+  <div class="sec-head">
+    <span class="num">04 · Simulateur</span>
+    <h2 id="h-sim">Le classement tient-il si on change la grille ?</h2>
+    <p>Le critère coût compte 3,75 % de la grille, et les deux baisses de DeepSeek sont deux jugements sur le même bug. Réglez le poids du coût et les notes C3 et C4 de DeepSeek : le réglage de départ reproduit le rapport (88,9 contre 85,9). Les autres critères sont rééchelonnés pour que la somme reste à 100 %.</p>
+  </div>
+
+  <div class="sim">
+    <div class="card controls">
+      <div class="ctl">
+        <div class="presets" role="group" aria-label="Scénarios">
+          <button class="btn" type="button" data-w="3.75" data-c3="2" data-c4="3" aria-pressed="true">Rapport v3</button>
+          <button class="btn" type="button" data-w="3.75" data-c3="2" data-c4="4.5" aria-pressed="false">Bug compté une fois</button>
+          <button class="btn" type="button" data-w="7.5" data-c3="2" data-c4="3" aria-pressed="false">Coût ×2</button>
+          <button class="btn" type="button" data-w="0" data-c3="2" data-c4="3" aria-pressed="false">Sans critère coût</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <label for="inW">Poids du critère coût (E1) <output id="outW" for="inW">3,75 %</output></label>
+        <input id="inW" type="range" min="0" max="20" step="0.25" value="3.75">
+        <p class="hint">Rapport : 15 % pour le domaine E, soit 3,75 % pour E1 (quatre critères). Coût de Claude noté 0, celui de DeepSeek 5.</p>
+      </div>
+      <div class="ctl">
+        <label for="inC3">Note C3 de DeepSeek (correction métier) <output id="outC3" for="inC3">2</output></label>
+        <input id="inC3" type="range" min="0" max="5" step="0.5" value="2">
+        <p class="hint">Rapport : 2, contre 4,5 avant l'exécution.</p>
+      </div>
+      <div class="ctl">
+        <label for="inC4">Note C4 de DeepSeek (qualité du code) <output id="outC4" for="inC4">3</output></label>
+        <input id="inC4" type="range" min="0" max="5" step="0.5" value="3">
+        <p class="hint">Rapport : 3, contre 4,5 avant l'exécution. Même défaut que C3.</p>
+      </div>
+      <div class="formula" aria-label="Formule">score = Σ poids × note / 5 × 100</div>
+      <p class="assume">Les 23 notes par critère viennent de l'annexe A du rapport. Seuls le poids de E1 et les notes C3 et C4 de DeepSeek varient ici.</p>
+    </div>
+
+    <div>
+      <div class="out" aria-live="polite">
+        <div class="tile"><p class="who"><i style="background:var(--blue)"></i>Claude Opus 5.5</p><div class="val" id="oC">88,9</div></div>
+        <div class="tile"><p class="who"><i style="background:var(--orange)"></i>DeepSeek V4.1 Flash</p><div class="val" id="oD">85,9</div></div>
+        <div class="tile"><p>Écart, Claude − DeepSeek</p><div class="val" id="oG">+2,9</div><p class="sm" id="oGc">Claude devant</p></div>
+        <div class="tile"><p>Les scores se croisent à</p><div class="val" id="oB">6,5 %</div><p class="sm" id="oBc">de poids pour le coût</p></div>
+      </div>
+      <div class="card">
+        <div class="legend" id="legend"></div>
+        <div class="chartwrap" id="chartWrap" tabindex="0" aria-label="Graphique des scores selon le poids du critère coût. Flèches gauche et droite pour parcourir les valeurs.">
+          <svg id="chart" viewBox="0 0 760 340" role="img" aria-label="Scores de Claude et de DeepSeek selon le poids du critère coût"></svg>
+          <div class="tip" id="tip" hidden></div>
+        </div>
+        <div class="chart-foot">
+          <p id="chartNote">Le score de Claude baisse avec le poids du coût (son critère E1 vaut 0), celui de DeepSeek monte.</p>
+          <button class="btn" id="tblBtn" type="button" aria-pressed="false" aria-controls="tblWrap">Afficher le tableau</button>
+        </div>
+        <div class="tbl-wrap" id="tblWrap" hidden></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="vision" aria-labelledby="h-vis">
+  <div class="sec-head">
+    <span class="num">05 · Ma vision</span>
+    <h2 id="h-vis">Le validateur décide, pas le modèle</h2>
+  </div>
+
+  <div class="vision-top">
+    <div class="hero">
+      <div class="big">+3&nbsp;%</div>
+      <p>C'est ce que coûte, en argent, d'essayer DeepSeek d'abord quand un test d'intégration attrape l'échec : 0,93&nbsp;$ perdus sur 28,23&nbsp;$, hors coût du validateur. Sans ce test, on livre l'application cassée. En temps, repartir de zéro ajoute 1&nbsp;h&nbsp;44.</p>
+    </div>
+    <div class="principles">
+      <div class="card">
+        <h3>Le validateur compte plus que le modèle</h3>
+        <p>Build et tests unitaires étaient verts, l'application ne fonctionnait pas. Un test de fumée (démarrer l'API sur le moteur cible, créer une demande, l'approuver) l'aurait vu en quelques secondes. C'est la « règle d'or du validateur objectif » du cadre d'orchestration : ce match montre à quoi il doit ressembler.</p>
+      </div>
+      <div class="card">
+        <h3>Deux colonnes, pas une</h3>
+        <p>Noter l'application telle que livrée, puis après une boucle de correction bornée, par exemple trois itérations avec coût et temps comptés. La première dit si le modèle est fiable seul, la seconde ce que coûte l'application qui marche. Je pense que Flash corrigerait ce bug seul, puisque l'erreur contient le remède, mais c'est une hypothèse à tester.</p>
+      </div>
+      <div class="card">
+        <h3>Une barrière, pas seulement un score</h3>
+        <p>Ajouter un critère automatique « l'application démarre et accepte une écriture » qui plafonne la note du backend, comme C1, C2 et D1 sont déjà automatiques. Publier deux vues : le score pondéré et le couple qualité / coût (91,3 pour 28,23&nbsp;$, 83,9 pour 0,93&nbsp;$), sans choisir le poids du coût à la place du lecteur.</p>
+      </div>
+    </div>
+  </div>
+
+  <ol class="steps">
+    <li>
+      <h3>Rejouer sur le même moteur</h3>
+      <p>PostgreSQL pour les deux applications, ou SQL Server si c'est la cible. Y exécuter les 78 tests d'intégration de Claude, et vérifier si son code active la reprise sur erreur avec des transactions ouvertes à la main sur cette voie.</p>
+    </li>
+    <li>
+      <h3>Automatiser la preuve de fonctionnement</h3>
+      <p>Dans le script du montage, après le build : lancer l'API, créer un utilisateur, soumettre une demande, l'approuver. Un échec plafonne C3, sans jugement subjectif et sans second évaluateur IA.</p>
+    </li>
+    <li>
+      <h3>Répéter les essais</h3>
+      <p>Au moins trois par modèle, et une relecture humaine en aveugle du domaine B : un quart de la note, où quatre critères sur cinq sont identiques chez les deux modèles.</p>
+    </li>
+    <li>
+      <h3>Mesurer le coût jusqu'à l'application qui marche</h3>
+      <p>Relancer DeepSeek avec la consigne de tester ses propres écritures, compter les itérations et le coût, puis comparer aux 28,23&nbsp;$ de Claude. C'est la mesure qui sert vraiment au routage.</p>
+    </li>
+    <li>
+      <h3>Router selon la disponibilité d'un validateur</h3>
+      <p>Flash d'abord pour les spécifications, le frontend et les brouillons, et pour le backend dès qu'un test d'intégration sur moteur réel existe. Opus pour écrire ces tests et relire les chemins transactionnels contre les décisions d'architecture.</p>
+    </li>
+  </ol>
+  <p class="closing">Le rapport conclut qu'il faut exécuter la solution et exiger des tests d'intégration avant de la juger livrable : je suis d'accord. Je n'en déduirais pas pour autant qu'il faut réserver Opus au backend. Sur un seul essai, l'écart vient d'un test absent plus que d'un modèle moins capable, et ce rapport est le premier point de calibration du cadre d'orchestration que j'ai analysé hier.</p>
+</section>
+
+<section aria-labelledby="h-lim">
+  <div class="sec-head">
+    <span class="num">06 · Limites</span>
+    <h2 id="h-lim">Ce que cette analyse ne couvre pas</h2>
+  </div>
+  <ul class="plain">
+    <li>Je n'ai lu que les deux PDF : pas le dépôt, ni les transcripts, ni le code. Les décomptes (173 tests, sept transactions, 7 282 lignes) ne sont pas revérifiés.</li>
+    <li>J'ai regardé les captures en basse résolution. Mes remarques sur le mobile s'appuient sur les légendes et sur un coup d'œil, pas sur un test à 390 px.</li>
+    <li>Le message d'erreur et le correctif d'EF Core sont confirmés par la documentation Microsoft. Que SQLite n'ait pas de stratégie de reprise vient de ma connaissance d'EF Core : je ne l'ai pas retrouvé dans une source.</li>
+    <li>Le fuseau horaire des runs n'est pas indiqué. L'hypothèse « heure creuse » pour DeepSeek est probable, pas établie. Les numéros de correctif de React et Vite, Claude Code 2.1.332 et dsh 0.2.2-rc.5 ne sont pas vérifiés.</li>
+  </ul>
+</section>
+
+<section id="sources" aria-labelledby="h-src">
+  <div class="sec-head">
+    <span class="num">07 · Sources</span>
+    <h2 id="h-src">Sources</h2>
+  </div>
+  <ul class="sources">
+    <li><span>Documents analysés</span>Rapport de notation TeamLeave v3 et comparaison fonctionnelle et UX v2 (PDF fournis)</li>
+    <li><span>EF Core, reprise et transactions</span><div><a href="https://learn.microsoft.com/ef/core/miscellaneous/connection-resiliency" target="_blank" rel="noopener">Microsoft Learn, Connection Resiliency</a> · <a href="https://learn.microsoft.com/dotnet/architecture/microservices/implement-resilient-applications/implement-resilient-entity-framework-core-sql-connections" target="_blank" rel="noopener">Microsoft Learn, connexions SQL résilientes (message d'erreur)</a></div></li>
+    <li><span>DeepSeek V4.1 Flash, tarifs</span><div><a href="https://api-docs.deepseek.com/news/news260910" target="_blank" rel="noopener">DeepSeek, annonce du 10 sept.</a> · <a href="https://apidog.com/blog/deepseek-v4-1-flash-pricing/" target="_blank" rel="noopener">Apidog</a> · <a href="https://www.eesel.ai/blog/deepseek-v4-1-flash-pricing" target="_blank" rel="noopener">eesel (heures de pointe)</a></div></li>
+    <li><span>Claude Opus 5.5, tarifs</span><div><a href="https://platform.claude.com/docs/en/about-claude/pricing" target="_blank" rel="noopener">Anthropic, tarification</a> · <a href="https://www.finout.io/blog/claude-opus-5.5-pricing-2026-what-anthropics-new-flagship-actually-costs" target="_blank" rel="noopener">Finout</a></div></li>
+    <li><span>Versions des outils</span><div><a href="https://react.dev/blog/2026/09/09/react-19-3" target="_blank" rel="noopener">React 19.3</a> · <a href="https://vite.dev/blog/announcing-vite8" target="_blank" rel="noopener">Vite 8</a> · <a href="https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/" target="_blank" rel="noopener">TypeScript 7.0</a></div></li>
+    <li><span>Analyse précédente</span><a href="https://claude.ai/artifact/Vk9ZKW5tiPmU9HCZ1JDjX9" target="_blank" rel="noopener">Orchestration des modèles, analyse critique</a></li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">Analyse du 26 nov. 2026 · Documents analysés : rapport de notation TeamLeave v3 (16 p.) et comparaison fonctionnelle et UX v2 (13 p.), runs du 25 nov. 2026.</div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+  var NS = "http://www.w3.org/2000/svg";
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var BLUE = "#338ced", ORANGE = "#e76624";
+
+  /* ---------- utilitaires ---------- */
+  function el(name, attrs, parent) {
+    var n = document.createElementNS(NS, name);
+    for (var k in attrs) { n.setAttribute(k, attrs[k]); }
+    if (parent) { parent.appendChild(n); }
+    return n;
+  }
+  function fr(x, d) {
+    return x.toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).replace("-", "−");
+  }
+  function frm(x, d) {
+    return x.toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: d }).replace("-", "−");
+  }
+  function r1(x) { return Math.round((x + 1e-9) * 10) / 10; }
+  function f1(x) { return fr(r1(x), 1); }
+  function sgn(x, d) {
+    var a = Math.abs(x), t = fr(a, d);
+    var zero = Number(t.replace(",", ".").replace(/\s/g, "")) === 0;
+    return (zero ? "" : x > 0 ? "+" : "−") + t;
+  }
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+  /* ---------- navigation par ancres ---------- */
+  document.querySelectorAll(".nav a").forEach(function (a) {
+    a.addEventListener("click", function (e) {
+      var t = document.getElementById(a.getAttribute("href").slice(1));
+      if (t) { e.preventDefault(); t.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }); }
+    });
+  });
+
+  /* ---------- schéma animé ---------- */
+  function addDot(svg, d, color, start, move, cycle) {
+    var c = el("circle", { r: 5, fill: color, stroke: "#191919", "stroke-width": 2, opacity: 0 }, svg);
+    var t0 = start / cycle, t1 = (start + move) / cycle, e = 0.004;
+    var m = el("animateMotion", {
+      dur: cycle + "s", repeatCount: "indefinite", path: d, calcMode: "linear",
+      keyTimes: "0;" + t0 + ";" + t1 + ";1", keyPoints: "0;0;1;1"
+    }, c);
+    el("animate", {
+      attributeName: "opacity", dur: cycle + "s", repeatCount: "indefinite", calcMode: "linear",
+      keyTimes: "0;" + t0 + ";" + (t0 + e) + ";" + t1 + ";" + (t1 + e) + ";1",
+      values: "0;0;1;1;0;0"
+    }, c);
+  }
+  var svgP = document.getElementById("svgP");
+  if (!reduce) {
+    var cyc = 12;
+    addDot(svgP, "M110,150 C136,150 136,61 160,61 L512,61 C545,61 545,150 570,150 L905,150", BLUE, 0, 5.5, cyc);
+    addDot(svgP, "M110,150 C136,150 136,227 160,227 L512,227 C545,227 545,150 570,150 L905,150", ORANGE, 6, 5.5, cyc);
+  }
+  var pauseBtn = document.getElementById("pauseBtn");
+  if (reduce) { pauseBtn.hidden = true; }
+  pauseBtn.addEventListener("click", function () {
+    var paused = pauseBtn.getAttribute("aria-pressed") === "true";
+    if (paused) { svgP.unpauseAnimations(); } else { svgP.pauseAnimations(); }
+    pauseBtn.setAttribute("aria-pressed", String(!paused));
+    pauseBtn.textContent = paused ? "Mettre l'animation en pause" : "Reprendre l'animation";
+  });
+
+  /* ---------- icônes ---------- */
+  var ICON = {
+    erreur: '<svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="7"/><path d="M4.6 4.6l4.8 4.8M9.4 4.6L4.6 9.4"/></svg>',
+    nuancer: '<svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="7"/><path d="M7 3.8v3.6M7 9.6v.2"/></svg>',
+    angle: '<svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="7"/><path d="M7 3.8v3.6M7 9.6v.2"/></svg>',
+    ok: '<svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="7"/><path d="M4 7.4l2 2 4-4.4"/></svg>',
+    dash: '<svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="7"/><path d="M4.2 7h5.6"/></svg>'
+  };
+
+  /* ---------- matrice vu / déduit / non testé ---------- */
+  var ST = {
+    vu: ["Vu à l'écran", ICON.ok], api: ["Vu via l'API", ICON.ok], tests: ["Tests seuls", ICON.nuancer],
+    code: ["Déduit du code", ICON.nuancer], copie: ["Copie corrigée", ICON.nuancer],
+    non: ["Non montré", ICON.dash], contra: ["Contradictoire", ICON.erreur]
+  };
+  var ROWS = [
+    { f: "Connexion et mot de passe", c: ["vu", "Connexion et changement de mot de passe"], d: ["vu", "Connexion ; écran de mot de passe décrit dans la comparaison UX"], r: "OK des deux côtés" },
+    { f: "Estimation des jours avant envoi", c: ["vu", "3 jours ouvrés"], d: ["vu", "3 jours ouvrés"], r: "OK des deux côtés" },
+    { f: "Envoi d'une demande", c: ["vu", "Confirmation, solde mis à jour"], d: ["vu", "« Erreur interne » à chaque envoi (HTTP 500)"], r: "Échec observé" },
+    { f: "Approbation par le manager", c: ["vu", "OK"], d: ["code", "« Non atteignable » : aucune demande ne peut être créée"], r: "Résumé : échec HTTP 500" },
+    { f: "Refus avec motif", c: ["vu", "Motif obligatoire vérifié"], d: ["code", "Non testé tel que livré, vu sur la copie corrigée"], r: "Résumé : échec HTTP 500" },
+    { f: "Annulation d'une demande", c: ["tests", "Aucune interface ; tests d'intégration"], d: ["non", "Aucune interface, absente de la comparaison UX"], r: "Résumé : échec HTTP 500" },
+    { f: "Ajustement de solde (admin RH)", c: ["contra", "Rapport : non parcouru, couvert par des tests. Comparaison UX : « OK » (API)"], d: ["api", "Erreur 500 observée via l'API"], r: "Échec observé" },
+    { f: "Alerte de chevauchement supérieur à 50 %", c: ["vu", "Acquittement bloquant avant approbation"], d: ["copie", "Vue seulement sur la copie corrigée"], r: "Non atteignable tel que livré" },
+    { f: "Calendrier d'équipe", c: ["vu", "Grille par personne, jours fériés"], d: ["copie", "Vide tel que livré (rien d'approuvable), complet après correctif"], r: "« OK » dans le rapport" },
+    { f: "Rendu mobile (390 px)", c: ["vu", "Grille coupée à droite"], d: ["copie", "Jugé sur la copie corrigée uniquement"], r: "D3 : 3 contre 4,5" }
+  ];
+  (function () {
+    var wrap = document.getElementById("matrixWrap");
+    var t = document.createElement("table"); t.className = "matrix";
+    var cap = document.createElement("caption"); cap.className = "sr-only";
+    cap.textContent = "Fonctions de TeamLeave : ce qui a été vu à l'écran, observé via l'API, déduit du code ou non testé";
+    t.appendChild(cap);
+    var hr = document.createElement("tr");
+    ["Fonction", "Claude Opus 5.5", "DeepSeek, tel que livré", "Ce que dit le rapport"].forEach(function (x) {
+      var th = document.createElement("th"); th.scope = "col"; th.textContent = x; hr.appendChild(th);
+    });
+    t.appendChild(hr);
+    function cell(pair) {
+      var td = document.createElement("td");
+      var s = document.createElement("span"); s.className = "st s-" + pair[0];
+      s.innerHTML = ST[pair[0]][1] + ST[pair[0]][0];
+      var n = document.createElement("span"); n.className = "note"; n.textContent = pair[1];
+      td.append(s, n); return td;
+    }
+    ROWS.forEach(function (r) {
+      var tr = document.createElement("tr");
+      var a = document.createElement("td"); a.textContent = r.f; tr.appendChild(a);
+      tr.appendChild(cell(r.c)); tr.appendChild(cell(r.d));
+      var z = document.createElement("td"); z.className = "rep"; z.textContent = r.r; tr.appendChild(z);
+      t.appendChild(tr);
+    });
+    wrap.replaceChildren(t);
+  })();
+
+  /* ---------- constats ---------- */
+  var LABEL = { erreur: "Erreur", nuancer: "À nuancer", angle: "Angle mort", ok: "Confirmé" };
+  var HEAD = {
+    erreur: ["Les documents disent", "Les recoupements montrent"],
+    nuancer: ["Les documents disent", "Les recoupements montrent"],
+    angle: ["Ce qui manque", "Pourquoi ça compte"],
+    ok: ["Affirmation", "Vérification"]
+  };
+  var ITEMS = [
+    { k: "erreur", t: "« Toutes les écritures échouent en HTTP 500 »",
+      a: "Le résumé du rapport affirme que l'envoi, l'approbation, le refus, l'annulation et l'ajustement de solde échouent tous.",
+      b: "La comparaison UX n'a vu l'échec que pour l'envoi d'une demande (à l'écran) et l'ajustement de solde (via l'API). Pour l'approbation et le refus, elle écrit « non atteignable » ou « non testé tel que livré », faute de demande à traiter. L'annulation n'y figure pas. L'échec reste très probable, puisque le code ouvre sept transactions manuelles, dont celles du manager, mais il est déduit, pas observé : 2 écritures sur 5." },
+    { k: "erreur", t: "Claude : « non parcouru » ou « OK » ?",
+      a: "Rapport : l'ajustement de solde et l'annulation de Claude n'ont pas été parcourus à l'écran, ils sont couverts par des tests d'intégration.",
+      b: "La comparaison UX note la même fonction « OK » (API). Aucune des deux applications n'a d'écran d'administration ni de liste « mes demandes ». La phrase « fonctionne de bout en bout telle que livrée » vaut donc pour le parcours employé, manager et calendrier, pas pour l'administration. Les deux documents sont à harmoniser." },
+    { k: "nuancer", t: "« Le bug est dans le code » : vrai, mais le test n'est pas symétrique",
+      a: "Claude a tourné sur SQLite, DeepSeek sur PostgreSQL 14 (le projet vise la 17). Le bug ne dépend pas de la version de PostgreSQL.",
+      b: "Exact : EF Core interdit cette combinaison, Microsoft la documente, et le message cité a la forme documentée. Mais le problème ne peut pas apparaître sur SQLite, qui n'a, à ma connaissance, pas de stratégie de reprise. L'application de Claude n'a donc jamais tourné sur son moteur de production (SQL Server). On ignore si son code y active la reprise avec des transactions manuelles, et sur quel moteur passent ses 78 tests d'intégration." },
+    { k: "nuancer", t: "Aucune barrière dans une grille additive",
+      a: "Une application qui échoue à l'envoi d'une demande obtient 85,9/100, contre 88,9 pour celle qui fonctionne.",
+      b: "La grille additive n'a pas de seuil d'acceptation. Même avec C3 à 0, DeepSeek reste à 83,9. Pour décider d'un routage, « livrable utilisable ou non » est une question binaire que la moyenne dilue. Le rapport la traite en prose (résumé, point 1), pas dans le score." },
+    { k: "nuancer", t: "Un score qui mélange « tel que livré » et « après correctif »",
+      a: "Le titre porte sur l'application telle que livrée.",
+      b: "Mais D3 (+0,5 pour DeepSeek), l'alerte à 50 %, le calendrier et le mobile ont été jugés sur la copie corrigée, et C3 reçoit un crédit partiel parce que le correctif tient en une ligne. Les deux lectures se défendent, mais elles ne devraient pas se mélanger dans une seule note." },
+    { k: "nuancer", t: "Un défaut, deux critères",
+      a: "C3 de DeepSeek passe de 4,5 à 2 et C4 de 4,5 à 3.",
+      b: "Les deux baisses viennent du même bug (C4 : « le code ne suit pas l'architecture », décision E-02). Le rapport évite le double comptage pour C5 et D2, pas entre C3 et C4 : ensemble, −4,0 points. Si C4 était restée à 4,5, l'écart passerait de 2,9 à 1,4 point." },
+    { k: "nuancer", t: "Le classement dépend d'un seul coefficient",
+      a: "« Le coût très bas de DeepSeek ne compense plus » ; Claude devant de 3 points.",
+      b: "Le coût n'a pas changé entre la v2 et la v3 : la bascule vient des notes C3 et C4. Il pèse 3,75 % de la grille (critère E1). À partir de 6,5 %, DeepSeek passe devant, et à 10 % il mène de 3,8 points. La section 5 du rapport le dit sans le chiffrer. L'écart de qualité seule (7 points) ne dépend pas de ce choix." },
+    { k: "nuancer", t: "Une évaluation bruitée, un quart de la grille sans signal",
+      a: "Notes attribuées par une IA, aveugle partiel, un seul essai par modèle.",
+      b: "Entre la v2 et la v3, la note de DeepSeek a bougé de 3,7 points après le passage d'un second agent : du même ordre que l'écart final (2,9). Le domaine B (25 %) donne 4,5 sur quatre critères sur cinq aux deux modèles. Sur 23 critères, Claude en a 20 à 4,5 ou plus et DeepSeek 17 : le haut de l'échelle est saturé." },
+    { k: "nuancer", t: "« Environ 30 fois moins cher » : surtout un ratio de tarifs",
+      a: "0,93 $ contre 28,23 $, soit environ 30 fois moins cher.",
+      b: "Le calcul est exact (30,4×). Au catalogue, le ratio est de 27× sur l'entrée hors cache (4 $ contre 0,15 $ le million), 33× sur la sortie (20 $ contre 0,60 $) et 67× sur le cache (0,20 $ contre 0,003 $) : le 30× reflète surtout les tarifs, pour un volume de tokens comparable (celui de Claude n'est pas donné). DeepSeek double ses prix en heure pleine (jours ouvrés, 1 h–4 h et 6 h–10 h UTC) et les a changés plusieurs fois en 2026. Le ratio du 25 novembre n'est pas une constante." },
+    { k: "nuancer", t: "Mobile : « coupée » ne veut pas dire « inutilisable »",
+      a: "La grille du calendrier de Claude est coupée à droite à 390 px (D3 : 3 contre 4,5).",
+      b: "La capture montre une grille qui ne présente que les six premiers jours du mois. Elle ne dit pas si le conteneur défile horizontalement, ce qui serait courant pour ce type de grille. Un test de trente secondes tranche. L'écart de 1,5 point en D3 pèse 0,9 point du score final." },
+    { k: "nuancer", t: "La « correction d'une ligne » est un contournement",
+      a: "Retirer EnableRetryOnFailure répare l'application.",
+      b: "Cela supprime la reprise sur erreur transitoire que la décision E-02 voulait garder, ce qui compte pour un déploiement Azure. Le correctif complet enveloppe chaque transaction dans la stratégie d'exécution, aux sept endroits, comme le documente Microsoft. Le rapport cite les deux ; le « une ligne » ne vaut que pour le contournement." },
+    { k: "nuancer", t: "Cinq pages ou six pour DeepSeek ?",
+      a: "Annexe B : 5 pages pour DeepSeek (« dont connexion, 404 »), 7 pour Claude (dont connexion, mot de passe, 404).",
+      b: "La comparaison UX décrit pourtant pour DeepSeek un écran dédié de changement de mot de passe. Soit il n'est pas compté, soit il vit dans la page de connexion. Détail mineur, à clarifier." },
+    { k: "angle", t: "Le validateur « build + tests » aurait accepté l'application cassée",
+      a: "C1 (build) et C2 (tests) restent à 5 pour DeepSeek, par définition de la grille.",
+      b: "C'est le point le plus utile du rapport pour le routage : un validateur qui ne démarre pas l'application ne valide rien sur du code qui touche aux données. Le cadre d'orchestration faisait du « validateur objectif » la condition de la cascade. Ce match montre qu'il faut le définir : un test d'intégration sur le moteur réel, ou à défaut un test de fumée." },
+    { k: "angle", t: "La boucle de correction n'est pas mesurée",
+      a: "Zéro correction manuelle, zéro relance automatique.",
+      b: "Le protocole mesure le premier jet. Or l'erreur renvoyée contient le remède : le message type d'EF Core indique d'utiliser la stratégie d'exécution. Un agent qui démarre l'API et soumet une demande verrait le 500. Le coût jusqu'à l'application qui marche est la mesure utile au routage, et elle manque." },
+    { k: "angle", t: "Une conception juste, un code qui diverge",
+      a: "La décision E-02 de DeepSeek décrit la bonne méthode ; le code ne l'applique nulle part.",
+      b: "L'écart entre conception et implémentation est le vrai défaut. Il se détecte par une relecture décision → code ou par un test, pas par un meilleur modèle. Claude a six tests d'architecture qui vérifient les couches ; DeepSeek n'en a aucun." },
+    { k: "angle", t: "Où est la logique métier de DeepSeek ?",
+      a: "Backend DeepSeek : 7 282 lignes dont 4 273 en Infrastructure et 750 en Application. Claude : 5 418 dont 837 et 2 502.",
+      b: "Le rapport ne commente pas ce découpage. Une couche Infrastructure cinq fois plus grosse et une couche Application trois fois plus petite suggèrent de la logique métier hors des couches prévues ; sans test d'architecture chez DeepSeek, rien ne le vérifie. Question ouverte, que je ne peux pas trancher sans le code." },
+    { k: "angle", t: "Ce que le benchmark ne regarde pas",
+      a: "Spécification, architecture, backend et frontend sur un seul essai.",
+      b: "Ni test de charge ni concurrence réelle (verrou optimiste chez Claude, exclusion PostgreSQL chez DeepSeek), ni audit de sécurité des autorisations, et aucun test frontend des deux côtés (0 et 0). Un seul run par modèle ne donne aucune variance." },
+    { k: "ok", t: "Les calculs du rapport sont exacts",
+      a: "Scores 88,9 et 85,9, qualité seule 91,3 et 83,9, ratio de coût, durées.",
+      b: "Recalculé critère par critère : 88,85 et 85,92 (arrondis à 88,9 et 85,9), 91,29 et 83,88, 30,4× et 0,309 $ contre 0,011 $ par point, durées d'étapes qui somment à 1 h 44 min 13 s et 1 h 44 min 39 s. Les moyennes par domaine de l'annexe A sont correctes." },
+    { k: "ok", t: "La cause racine est la bonne",
+      a: "EnableRetryOnFailure plus BeginTransactionAsync à sept endroits.",
+      b: "Confirmé par la documentation Microsoft : avec une stratégie de reprise, EF Core refuse les transactions ouvertes à la main et demande d'exécuter l'ensemble dans CreateExecutionStrategy().ExecuteAsync. Le décompte 2 + 2 + 3 = 7 est cohérent." },
+    { k: "ok", t: "Les limites sont annoncées",
+      a: "Section 5 du rapport.",
+      b: "IA évaluatrice et aveugle partiel, essai unique, correctif testé sur copie, coût en équivalent API, nombre de tests n'est pas qualité, poids de la grille. Le rapport évite aussi la double pénalité pour C5 et laisse C1 et C2 à 5 par définition." },
+    { k: "ok", t: "Les coûts sont plausibles",
+      a: "0,93 $ pour 111 millions de tokens ; 28,23 $ pour Claude.",
+      b: "Aux tarifs de V4.1 Flash en heure creuse (0,003 $ le cache, 0,15 $ l'entrée, 0,60 $ la sortie par million), 0,93 $ correspond à 97 à 99 % de cache-hits pour 0,2 à 0,8 million de tokens en sortie, normal pour une boucle d'agent. Aux tarifs de pointe, ce serait quasi impossible. Les runs ont eu lieu en soirée : heure creuse probable. Opus 5.5 est à 4 $ et 20 $, cache à 0,20 $ : 28 $ est un ordre de grandeur crédible, non vérifiable sans le volume de tokens." },
+    { k: "ok", t: "Les versions des outils existent",
+      a: "React 19.3.1, Vite 8.3.8, TypeScript 7.0.2.",
+      b: "React 19.3 est sorti le 9 sept. 2026, Vite 8 en mars, TypeScript 7.0 en juillet (7.0.2 figure dans l'annonce). Les numéros de correctif de React et Vite ne sont pas vérifiés." }
+  ];
+  var list = document.getElementById("list");
+  ITEMS.forEach(function (it) {
+    var art = document.createElement("article");
+    art.className = "item k-" + it.k;
+    art.dataset.k = it.k;
+    var row = document.createElement("div"); row.className = "row";
+    var h = document.createElement("h3"); h.textContent = it.t;
+    var pill = document.createElement("span"); pill.className = "pill k-" + it.k;
+    pill.innerHTML = ICON[it.k] + LABEL[it.k];
+    row.appendChild(h); row.appendChild(pill);
+    var dl = document.createElement("dl");
+    var h0 = document.createElement("dt"); h0.textContent = HEAD[it.k][0];
+    var d0 = document.createElement("dd"); d0.textContent = it.a;
+    var h1 = document.createElement("dt"); h1.textContent = HEAD[it.k][1];
+    var d1 = document.createElement("dd"); d1.textContent = it.b;
+    dl.append(h0, d0, h1, d1);
+    art.append(row, dl);
+    list.appendChild(art);
+  });
+  var count = document.getElementById("count");
+  function applyFilter(f) {
+    var n = 0;
+    list.querySelectorAll(".item").forEach(function (a) {
+      var show = f === "all" || a.dataset.k === f;
+      a.hidden = !show; if (show) { n++; }
+    });
+    count.textContent = n + (n > 1 ? " constats" : " constat");
+    document.querySelectorAll(".filters .btn").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b.dataset.f === f));
+    });
+  }
+  document.querySelectorAll(".filters .btn").forEach(function (b) {
+    b.addEventListener("click", function () { applyFilter(b.dataset.f); });
+  });
+  applyFilter("all");
+
+  /* ---------- infobulle ---------- */
+  function tipRows(tip, head, rows) {
+    tip.replaceChildren();
+    var h = document.createElement("div"); h.className = "tip-h"; h.textContent = head; tip.appendChild(h);
+    rows.forEach(function (r) {
+      var d = document.createElement("div"); d.className = "tip-r";
+      var k = document.createElement("span"); k.className = "tip-k"; k.style.background = r.color;
+      var v = document.createElement("strong"); v.textContent = r.value;
+      var n = document.createElement("span"); n.className = "tip-n"; n.textContent = r.name;
+      d.append(k, v, n); tip.appendChild(d);
+    });
+  }
+  function placeTip(tip, wrap, px) {
+    tip.hidden = false;
+    var w = wrap.clientWidth, tw = tip.offsetWidth;
+    tip.style.left = clamp(px - tw / 2, 4, w - tw - 4) + "px";
+  }
+
+  /* ---------- modèle de la grille (annexe A du rapport, version 3) ---------- */
+  var BASE_E1 = 0.0375;
+  /* [critère, poids dans la grille, note Claude, note DeepSeek] */
+  var CRIT = [
+    ["A1", 0.05, 4.5, 4], ["A2", 0.05, 4.5, 4.5], ["A3", 0.05, 4.5, 4], ["A4", 0.05, 4.5, 4],
+    ["B1", 0.05, 4.5, 4.5], ["B2", 0.05, 4.5, 4.5], ["B3", 0.05, 4.5, 4.5], ["B4", 0.05, 4.5, 4.5], ["B5", 0.05, 4.5, 5],
+    ["C1", 0.05, 5, 5], ["C2", 0.05, 5, 5], ["C3", 0.05, 5, 2], ["C4", 0.05, 4.5, 3], ["C5", 0.05, 5, 3],
+    ["D1", 0.03, 5, 5], ["D2", 0.03, 4.5, 4.5], ["D3", 0.03, 3, 4.5], ["D4", 0.03, 4, 4.5], ["D5", 0.03, 4.5, 4.5],
+    ["E1", BASE_E1, 0, 5], ["E2", BASE_E1, 5, 5], ["E3", BASE_E1, 5, 5], ["E4", BASE_E1, 5, 4.5]
+  ];
+  /* who : 2 = Claude, 3 = DeepSeek ; w : poids de E1 ; ov : notes remplacées */
+  function scoreOf(who, w, ov) {
+    var k = (1 - w) / (1 - BASE_E1), s = 0;
+    CRIT.forEach(function (c) {
+      var v = (ov && ov[c[0]] !== undefined) ? ov[c[0]] : c[who];
+      s += (c[0] === "E1" ? w : c[1] * k) * v;
+    });
+    return s / 5 * 100;
+  }
+
+  /* ---------- cascade de la bascule v2 -> v3 ---------- */
+  (function () {
+    var svg = document.getElementById("wf");
+    var W = 760, H = 384, X0 = 270, X1 = 730, VMIN = -2, VMAX = 4, top = 22, rowH = 46, bh = 22;
+    function x(v) { return X0 + (v - VMIN) / (VMAX - VMIN) * (X1 - X0); }
+    var ovC = { C3: 4.5, D3: 3.5 }, ovD = { C3: 4.5, C4: 4.5, D3: 4 };
+    function gap() { return scoreOf(2, BASE_E1, ovC) - scoreOf(3, BASE_E1, ovD); }
+    var g0 = gap();
+    var steps = [
+      { l: "DeepSeek, C3 : 4,5 → 2", s: "correction métier", f: function () { ovD.C3 = 2; } },
+      { l: "DeepSeek, C4 : 4,5 → 3", s: "qualité du code", f: function () { ovD.C4 = 3; } },
+      { l: "Claude, C3 : 4,5 → 5", s: "correction métier", f: function () { ovC.C3 = 5; } },
+      { l: "DeepSeek, D3 : 4 → 4,5", s: "visuel, responsive", f: function () { ovD.D3 = 4.5; } },
+      { l: "Claude, D3 : 3,5 → 3", s: "visuel, responsive", f: function () { ovC.D3 = 3; } }
+    ];
+    var rows = [{ l: "Écart avant exécution (v2)", s: "Claude − DeepSeek, en points", from: 0, to: g0, total: true }];
+    var cur = g0;
+    steps.forEach(function (st) { st.f(); var g = gap(); rows.push({ l: st.l, s: st.s, from: cur, to: g }); cur = g; });
+    rows.push({ l: "Écart après exécution (v3)", s: "Claude − DeepSeek, en points", from: 0, to: cur, total: true });
+
+    for (var v = VMIN; v <= VMAX; v++) {
+      el("line", { x1: x(v), x2: x(v), y1: top - 6, y2: top + rows.length * rowH - 8, stroke: v === 0 ? "#474747" : "#303030", "stroke-width": 1 }, svg);
+      var t = el("text", { x: x(v), y: top + rows.length * rowH + 8, "text-anchor": "middle", fill: "#9c9c9c", "font-size": 12 }, svg);
+      t.textContent = v === 0 ? "0" : (v > 0 ? "+" : "−") + Math.abs(v);
+    }
+    var at = el("text", { x: (X0 + X1) / 2, y: H - 6, "text-anchor": "middle", fill: "#9c9c9c", "font-size": 12 }, svg);
+    at.textContent = "Écart de score, Claude − DeepSeek (points sur 100)";
+
+    rows.forEach(function (r, i) {
+      var y = top + i * rowH, by = y + 6;
+      var l1 = el("text", { x: 250, y: y + 15, "text-anchor": "end", class: "lbl", "font-weight": 600 }, svg);
+      l1.textContent = r.l;
+      var l2 = el("text", { x: 250, y: y + 30, "text-anchor": "end", fill: "#9c9c9c", "font-size": 11 }, svg);
+      l2.textContent = r.s;
+      var a = Math.min(x(r.from), x(r.to)), b = Math.max(x(r.from), x(r.to));
+      var delta = r.to - r.from;
+      var color = r.total ? "#6b6b6b" : (delta > 0 ? BLUE : ORANGE);
+      el("rect", { x: a, y: by, width: Math.max(b - a, 2), height: bh, rx: 3, fill: color }, svg);
+      var val = r.total ? r.to : delta;
+      var toRight = r.total ? r.to >= 0 : delta > 0;
+      var vt = el("text", { x: toRight ? b + 8 : a - 8, y: by + bh / 2 + 5, "text-anchor": toRight ? "start" : "end", class: "lbl", "font-weight": 600 }, svg);
+      vt.textContent = sgn(val, 1);
+      if (i < rows.length - 1) {
+        var nx = x(r.to);
+        el("line", { x1: nx, x2: nx, y1: by + bh, y2: by + rowH, stroke: "#6b6b6b", "stroke-width": 1, "stroke-dasharray": "3 3" }, svg);
+      }
+    });
+    var c34 = (rows[1].to - rows[1].from) + (rows[2].to - rows[2].from);
+    var others = (cur - g0) - c34;
+    svg.setAttribute("aria-label", "Décomposition de la bascule : l'écart, Claude moins DeepSeek, passe de " + sgn(g0, 1) + " point avant l'exécution à " + sgn(cur, 1) + " points après. Les notes C3 et C4 de DeepSeek apportent " + sgn(c34, 1) + " points, les trois autres changements " + sgn(others, 1) + " au total.");
+    var tb = document.getElementById("wfTable");
+    var cp = document.createElement("caption"); cp.textContent = "Contribution de chaque changement de note à l'écart de score"; tb.appendChild(cp);
+    var hr = document.createElement("tr");
+    ["Étape", "Contribution (points)"].forEach(function (z) { var th = document.createElement("th"); th.scope = "col"; th.textContent = z; hr.appendChild(th); });
+    tb.appendChild(hr);
+    rows.forEach(function (r) {
+      var tr = document.createElement("tr");
+      var c1 = document.createElement("td"); c1.textContent = r.l;
+      var c2 = document.createElement("td"); c2.textContent = sgn(r.total ? r.to : r.to - r.from, 1);
+      tr.append(c1, c2); tb.appendChild(tr);
+    });
+  })();
+
+  /* ---------- simulateur de grille ---------- */
+  var st = { w: BASE_E1, c3: 2, c4: 3, hp: null };
+  var inW = document.getElementById("inW"), inC3 = document.getElementById("inC3"), inC4 = document.getElementById("inC4");
+  function ovD() { return { C3: st.c3, C4: st.c4 }; }
+  function sC(w) { return scoreOf(2, w, null); }
+  function sD(w) { return scoreOf(3, w, ovD()); }
+  function gapAt(w) { return sC(w) - sD(w); }
+  /* l'écart est linéaire en w : un point d'égalité existe si Claude est devant à w = 0 */
+  function breakEven() {
+    var g0 = gapAt(0), g1 = gapAt(0.2);
+    if (g0 <= 0 || g0 === g1) { return null; }
+    var w = g0 / (g0 - g1) * 0.2;
+    return (w > 0 && w < 1) ? w : null;
+  }
+
+  var W = 760, H = 340, M = { l: 58, r: 24, t: 26, b: 48 };
+  var X0 = M.l, X1 = W - M.r, Y0 = M.t, Y1 = H - M.b, WMAX = 0.2, YMIN = 70, YMAX = 95;
+  function sx(w) { return X0 + w / WMAX * (X1 - X0); }
+  function sy(v) { return Y1 - (v - YMIN) / (YMAX - YMIN) * (Y1 - Y0); }
+
+  var chart = document.getElementById("chart");
+  var wrap = document.getElementById("chartWrap");
+  var tip = document.getElementById("tip");
+
+  function lineD(fn) { return "M" + sx(0).toFixed(1) + "," + sy(fn(0)).toFixed(1) + "L" + sx(WMAX).toFixed(1) + "," + sy(fn(WMAX)).toFixed(1); }
+
+  function drawChart() {
+    chart.replaceChildren();
+    [70, 75, 80, 85, 90, 95].forEach(function (v) {
+      el("line", { x1: X0, x2: X1, y1: sy(v), y2: sy(v), stroke: v === 70 ? "#474747" : "#303030", "stroke-width": 1 }, chart);
+      var t = el("text", { x: X0 - 10, y: sy(v) + 4, "text-anchor": "end" }, chart);
+      t.textContent = String(v);
+    });
+    [0, 0.05, 0.10, 0.15, 0.20].forEach(function (w) {
+      el("line", { x1: sx(w), x2: sx(w), y1: Y1, y2: Y1 + 5, stroke: "#474747", "stroke-width": 1 }, chart);
+      var t = el("text", { x: sx(w), y: Y1 + 20, "text-anchor": "middle" }, chart);
+      t.textContent = Math.round(w * 100) + " %";
+    });
+    var xt = el("text", { x: (X0 + X1) / 2, y: H - 8, "text-anchor": "middle" }, chart);
+    xt.textContent = "Poids du critère coût dans la grille";
+    var yt = el("text", { x: X0, y: 14 }, chart);
+    yt.textContent = "Score sur 100";
+
+    /* grille du rapport */
+    el("line", { x1: sx(BASE_E1), x2: sx(BASE_E1), y1: Y0, y2: Y1, stroke: "#474747", "stroke-width": 1, "stroke-dasharray": "4 4" }, chart);
+    var rl = el("text", { x: sx(BASE_E1) + 6, y: Y1 - 8 }, chart);
+    rl.textContent = "grille du rapport";
+
+    el("path", { d: lineD(sC), fill: "none", stroke: BLUE, "stroke-width": 2, "stroke-linecap": "round" }, chart);
+    el("path", { d: lineD(sD), fill: "none", stroke: ORANGE, "stroke-width": 2, "stroke-linecap": "round" }, chart);
+
+    /* point d'égalité */
+    var be = breakEven();
+    if (be !== null && be <= WMAX) {
+      var bx = sx(be), by = sy(sC(be));
+      el("circle", { cx: bx, cy: by, r: 6, fill: "#191919", stroke: "#efefef", "stroke-width": 2 }, chart);
+      var bl = el("text", { x: bx + 12, y: by - 10, class: "lbl" }, chart);
+      bl.textContent = "Égalité à " + fr(be * 100, 1) + " %";
+    }
+
+    /* réglage courant */
+    var cx = sx(st.w);
+    el("line", { x1: cx, x2: cx, y1: Y0, y2: Y1, stroke: "#9c9c9c", "stroke-width": 1, opacity: 0.6 }, chart);
+    el("circle", { cx: cx, cy: sy(sC(st.w)), r: 5, fill: BLUE, stroke: "#191919", "stroke-width": 2 }, chart);
+    el("circle", { cx: cx, cy: sy(sD(st.w)), r: 5, fill: ORANGE, stroke: "#191919", "stroke-width": 2 }, chart);
+    var right = st.w > 0.14;
+    var cl = el("text", { x: cx + (right ? -8 : 8), y: Y0 + 12, class: "lbl", "text-anchor": right ? "end" : "start" }, chart);
+    cl.textContent = "Réglage : " + frm(st.w * 100, 2) + " %";
+
+    /* survol */
+    var hl = el("line", { x1: 0, x2: 0, y1: Y0, y2: Y1, stroke: "#efefef", "stroke-width": 1, opacity: 0, "pointer-events": "none" }, chart);
+    var ov = el("rect", { x: X0, y: Y0, width: X1 - X0, height: Y1 - Y0, fill: "transparent" }, chart);
+    function showAt(w) {
+      w = clamp(Math.round(w * 400) / 400, 0, WMAX);
+      st.hp = w;
+      hl.setAttribute("x1", sx(w)); hl.setAttribute("x2", sx(w)); hl.setAttribute("opacity", 0.5);
+      tipRows(tip, "Poids du coût : " + frm(w * 100, 2) + " %", [
+        { color: BLUE, value: f1(sC(w)), name: "Claude" },
+        { color: ORANGE, value: f1(sD(w)), name: "DeepSeek" },
+        { color: "#9c9c9c", value: sgn(gapAt(w), 1), name: "écart" }
+      ]);
+      var rect = chart.getBoundingClientRect();
+      placeTip(tip, wrap, sx(w) / W * rect.width);
+    }
+    function hide() { st.hp = null; hl.setAttribute("opacity", 0); tip.hidden = true; }
+    ov.addEventListener("pointermove", function (e) {
+      var rect = chart.getBoundingClientRect();
+      var xv = (e.clientX - rect.left) / rect.width * W;
+      showAt((xv - X0) / (X1 - X0) * WMAX);
+    });
+    ov.addEventListener("pointerleave", hide);
+    wrap.onkeydown = function (e) {
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        e.preventDefault();
+        var base = st.hp === null ? st.w : st.hp;
+        showAt(base + (e.key === "ArrowRight" ? 0.01 : -0.01));
+      } else if (e.key === "Escape") { hide(); }
+    };
+    wrap.onblur = hide;
+    chart.setAttribute("aria-label", "Scores selon le poids du critère coût. Au réglage actuel, " + frm(st.w * 100, 2) + " % : Claude " + f1(sC(st.w)) + ", DeepSeek " + f1(sD(st.w)) + ".");
+  }
+
+  function drawLegend() {
+    var lg = document.getElementById("legend");
+    lg.replaceChildren();
+    function add(color, text, ring) {
+      var s = document.createElement("span");
+      var k = document.createElement(ring ? "em" : "i");
+      if (ring) { k.style.background = "#191919"; k.style.boxShadow = "0 0 0 2px #efefef"; }
+      else { k.style.background = color; }
+      s.append(k, document.createTextNode(text)); lg.appendChild(s);
+    }
+    add(BLUE, "Claude Opus 5.5");
+    add(ORANGE, "DeepSeek V4.1 Flash");
+    add("#efefef", "Point d'égalité", true);
+  }
+
+  function drawTable() {
+    var w = document.getElementById("tblWrap");
+    var be = breakEven();
+    var ws = [0, 0.025, BASE_E1, 0.05, 0.075, 0.10, 0.15, 0.20];
+    if (be !== null && be <= WMAX) { ws.push(be); }
+    ws.sort(function (a, b) { return a - b; });
+    var t = document.createElement("table");
+    var cap = document.createElement("caption"); cap.className = "sr-only"; cap.textContent = "Scores selon le poids du critère coût"; t.appendChild(cap);
+    var hr = document.createElement("tr");
+    ["Poids du coût", "Claude", "DeepSeek", "Écart"].forEach(function (x) {
+      var th = document.createElement("th"); th.scope = "col"; th.textContent = x; hr.appendChild(th);
+    });
+    t.appendChild(hr);
+    ws.forEach(function (p) {
+      var tr = document.createElement("tr");
+      var isBase = Math.abs(p - BASE_E1) < 1e-9, isBe = be !== null && Math.abs(p - be) < 1e-9;
+      if (isBase) { tr.className = "hl"; }
+      var lab = frm(p * 100, 2) + " %" + (isBase ? " (rapport)" : "") + (isBe ? " (égalité)" : "");
+      [lab, f1(sC(p)), f1(sD(p)), sgn(gapAt(p), 1)].forEach(function (x) {
+        var td = document.createElement("td"); td.textContent = x; tr.appendChild(td);
+      });
+      t.appendChild(tr);
+    });
+    w.replaceChildren(t);
+  }
+
+  function render() {
+    st.w = parseFloat(inW.value) / 100; st.c3 = parseFloat(inC3.value); st.c4 = parseFloat(inC4.value);
+    document.getElementById("outW").textContent = frm(st.w * 100, 2) + " %";
+    document.getElementById("outC3").textContent = frm(st.c3, 1);
+    document.getElementById("outC4").textContent = frm(st.c4, 1);
+    var c = sC(st.w), d = sD(st.w), g = c - d;
+    document.getElementById("oC").textContent = f1(c);
+    document.getElementById("oD").textContent = f1(d);
+    document.getElementById("oG").textContent = sgn(g, 1);
+    document.getElementById("oGc").textContent = Math.abs(g) < 1 ? "Quasi-égalité" : (g > 0 ? "Claude devant" : "DeepSeek devant");
+    var be = breakEven();
+    if (be === null) {
+      document.getElementById("oB").textContent = "—";
+      document.getElementById("oBc").textContent = "DeepSeek est devant même sans critère coût";
+    } else {
+      document.getElementById("oB").textContent = fr(be * 100, 1) + " %";
+      document.getElementById("oBc").textContent = be > WMAX ? "de poids pour le coût (hors du graphique)" : "de poids pour le coût";
+    }
+    document.getElementById("chartNote").textContent = "Sans critère coût, l'écart (Claude − DeepSeek) serait de " + sgn(gapAt(0), 1) + " points. Chaque point de poids en plus pour le coût le réduit d'environ " + fr(Math.abs((gapAt(WMAX) - gapAt(0)) / 20), 1) + " point.";
+    document.querySelectorAll(".presets .btn").forEach(function (b) {
+      var same = Math.abs(parseFloat(b.dataset.w) - parseFloat(inW.value)) < 1e-6 && parseFloat(b.dataset.c3) === st.c3 && parseFloat(b.dataset.c4) === st.c4;
+      b.setAttribute("aria-pressed", String(same));
+    });
+    drawLegend(); drawChart(); drawTable();
+  }
+  [inW, inC3, inC4].forEach(function (i) { i.addEventListener("input", render); });
+  document.querySelectorAll(".presets .btn").forEach(function (b) {
+    b.addEventListener("click", function () {
+      inW.value = b.dataset.w; inC3.value = b.dataset.c3; inC4.value = b.dataset.c4; render();
+    });
+  });
+  var tblBtn = document.getElementById("tblBtn"), tblWrap = document.getElementById("tblWrap");
+  tblBtn.addEventListener("click", function () {
+    var open = tblBtn.getAttribute("aria-pressed") === "true";
+    tblBtn.setAttribute("aria-pressed", String(!open));
+    tblWrap.hidden = open;
+    tblBtn.textContent = open ? "Afficher le tableau" : "Masquer le tableau";
+  });
+  render();
+})();
+
+</script>
+</body>
+</html>
