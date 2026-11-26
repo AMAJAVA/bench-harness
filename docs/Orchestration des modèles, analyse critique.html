@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orchestration des modèles, analyse critique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Plan : dossier d'analyse sombre, une seule colonne de lecture (1040px).
+     Bleu = modèle économique, orange = modèle fort. Les couleurs de statut ne servent qu'aux pastilles. */
+  color-scheme: dark;
+  --page: #0b0b0b;
+  --surface: #191919;
+  --raise: #222222;
+  --ink: #efefef;
+  --ink-2: #9c9c9c;
+  --line: #303030;
+  --axis: #474747;
+  --edge: rgba(255, 255, 255, 0.10);
+  --blue: #338ced;
+  --orange: #e76624;
+  --good: #0aac23;
+  --warn: #fbb315;
+  --serious: #f18a59;
+  --critical: #dc3c3d;
+  --mute: #6b6b6b;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-padding-top: 72px; }
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font: 400 16px/1.6 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--blue); text-underline-offset: 3px; }
+a:hover { color: #6aabf1; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 4px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; font-weight: 600; letter-spacing: -0.01em; }
+p { margin: 0; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+.mono { font-family: var(--mono); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* barre de navigation */
+.nav { position: sticky; top: 0; z-index: 20; background: rgba(11, 11, 11, 0.88); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.nav .wrap { display: flex; gap: 4px 20px; align-items: center; flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; }
+.nav b { font: 500 12px/1 var(--mono); color: var(--ink-2); letter-spacing: 0.06em; text-transform: uppercase; margin-right: auto; }
+.nav a { font-size: 14px; color: var(--ink-2); text-decoration: none; padding: 4px 2px; }
+.nav a:hover { color: var(--ink); }
+
+/* en-tête */
+header.top { padding: 56px 0 28px; }
+.eyebrow { font: 500 12px/1.4 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+h1 { font-size: clamp(30px, 4.6vw, 48px); line-height: 1.1; margin-top: 14px; max-width: 20ch; }
+.lede { margin-top: 18px; color: var(--ink-2); max-width: 64ch; font-size: 17px; }
+.verdict { margin-top: 26px; max-width: 68ch; font-size: 18px; line-height: 1.55; }
+
+/* pastilles de statut : icône + libellé, jamais la couleur seule */
+.pill { display: inline-flex; align-items: center; gap: 7px; font: 500 12px/1 var(--sans); padding: 6px 10px 6px 8px; border-radius: 999px; background: var(--raise); border: 1px solid var(--edge); color: var(--ink); white-space: nowrap; }
+.pill svg { width: 14px; height: 14px; flex: none; }
+.k-erreur { --c: var(--critical); }
+.k-nuancer { --c: var(--serious); }
+.k-angle { --c: var(--warn); }
+.k-ok { --c: var(--good); }
+.pill svg circle { fill: var(--c); }
+.pill svg path { stroke: #0b0b0b; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* tuiles de chiffres */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin-top: 34px; }
+.tile { background: var(--surface); border: 1px solid var(--edge); border-radius: 10px; padding: 18px 18px 16px; display: flex; flex-direction: column; gap: 10px; }
+.tile .val { font-size: 44px; font-weight: 600; line-height: 1; letter-spacing: -0.02em; }
+.tile p { color: var(--ink-2); font-size: 14px; line-height: 1.5; }
+.tile p b { color: var(--ink); font-weight: 500; }
+.tile .pill { align-self: flex-start; }
+
+/* sections */
+section { padding: 56px 0 8px; }
+.sec-head { max-width: 70ch; margin-bottom: 26px; }
+.sec-head h2 { font-size: clamp(24px, 3vw, 32px); line-height: 1.2; }
+.sec-head p { margin-top: 12px; color: var(--ink-2); }
+.num { font: 500 12px/1 var(--mono); color: var(--ink-2); letter-spacing: 0.08em; display: block; margin-bottom: 12px; text-transform: uppercase; }
+
+/* schémas */
+.figs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+figure { margin: 0; background: var(--surface); border: 1px solid var(--edge); border-radius: 10px; padding: 16px 16px 14px; min-width: 0; }
+figure h3 { font-size: 15px; margin-bottom: 4px; }
+figure .sub { font: 500 12px/1.4 var(--mono); color: var(--ink-2); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 10px; }
+.scroll-x { overflow-x: auto; }
+svg.diag { display: block; width: 100%; min-width: 440px; height: auto; color: var(--ink-2); }
+svg text { font-family: var(--sans); }
+.t-main { fill: var(--ink); font-size: 13px; font-weight: 600; }
+.t-sub { fill: var(--ink-2); font-size: 11px; }
+.t-edge { fill: var(--ink-2); font-size: 11px; }
+.node { fill: var(--raise); stroke: var(--axis); stroke-width: 1.5; }
+.node.cheap { stroke: var(--blue); }
+.node.strong { stroke: var(--orange); }
+.edge { fill: none; stroke: currentColor; stroke-width: 1.5; }
+figcaption { margin-top: 12px; font-size: 14px; color: var(--ink-2); line-height: 1.5; }
+.diag-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-top: 16px; color: var(--ink-2); font-size: 14px; }
+.dot-key { display: inline-flex; align-items: center; gap: 7px; }
+.dot-key i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.btn { font: 500 14px/1 var(--sans); color: var(--ink); background: var(--raise); border: 1px solid var(--edge); border-radius: 8px; padding: 9px 13px; cursor: pointer; }
+.btn:hover { border-color: var(--axis); background: #292929; }
+.btn[aria-pressed="true"] { border-color: var(--blue); background: rgba(51, 140, 237, 0.14); }
+.takeaway { margin-top: 18px; max-width: 68ch; }
+
+/* constats */
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; align-items: center; }
+.filters .count { margin-left: auto; color: var(--ink-2); font-size: 14px; }
+.list { display: grid; gap: 12px; }
+.item { background: var(--surface); border: 1px solid var(--edge); border-left: 4px solid var(--c); border-radius: 10px; padding: 16px 18px 16px 16px; display: grid; gap: 10px; }
+.item[hidden] { display: none; }
+.item h3 { font-size: 17px; line-height: 1.35; font-weight: 600; }
+.item .row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-start; justify-content: space-between; }
+.item dl { margin: 0; display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 6px 16px; font-size: 15px; }
+.item dt { color: var(--ink-2); font-size: 13px; padding-top: 2px; }
+.item dd { margin: 0; max-width: 78ch; }
+
+/* simulateur */
+.sim { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 16px; align-items: start; }
+.card { background: var(--surface); border: 1px solid var(--edge); border-radius: 10px; padding: 18px; }
+.controls { display: grid; gap: 20px; }
+.ctl label { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; margin-bottom: 8px; }
+.ctl label output { font: 500 14px/1.2 var(--mono); color: var(--ink); white-space: nowrap; }
+.ctl .hint { font-size: 13px; color: var(--ink-2); margin-top: 6px; line-height: 1.45; }
+input[type="range"] { width: 100%; accent-color: var(--blue); height: 28px; margin: 0; }
+.presets { display: flex; flex-wrap: wrap; gap: 8px; }
+.formula { font: 500 13px/1.5 var(--mono); background: var(--raise); border: 1px solid var(--edge); border-radius: 8px; padding: 12px 14px; color: var(--ink); overflow-x: auto; white-space: nowrap; }
+.assume { font-size: 13px; color: var(--ink-2); line-height: 1.5; }
+.out { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 14px; }
+.out .tile { padding: 14px 16px; }
+.out .val { font-size: 32px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 14px; color: var(--ink-2); margin-bottom: 8px; }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.legend i { width: 16px; height: 2px; display: inline-block; border-radius: 2px; }
+.legend em { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--blue); box-shadow: 0 0 0 2px var(--surface); font-style: normal; }
+.chartwrap { position: relative; }
+.chartwrap svg { display: block; width: 100%; height: auto; }
+.chartwrap svg text { fill: var(--ink-2); font-size: 12px; }
+.chartwrap svg .lbl { fill: var(--ink); }
+.tip { position: absolute; top: 6px; pointer-events: none; background: #101010; border: 1px solid var(--axis); border-radius: 8px; padding: 9px 11px; font-size: 13px; line-height: 1.45; min-width: 150px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45); z-index: 3; }
+.tip[hidden] { display: none; }
+.tip-h { color: var(--ink-2); font-size: 12px; margin-bottom: 4px; }
+.tip-r { display: grid; grid-template-columns: 16px auto 1fr; align-items: center; gap: 8px; }
+.tip-k { display: block; height: 2px; border-radius: 2px; }
+.tip-r strong { font-weight: 600; }
+.tip-n { color: var(--ink-2); font-size: 12px; }
+.chart-foot { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; margin-top: 10px; }
+.chart-foot p { font-size: 13px; color: var(--ink-2); max-width: 60ch; }
+.tbl-wrap { overflow-x: auto; margin-top: 12px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: right; padding: 8px 12px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--ink-2); font-weight: 500; font-size: 13px; }
+tr.hl td { color: var(--ink); background: rgba(51, 140, 237, 0.10); }
+
+/* vision */
+.vision-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 16px; align-items: stretch; }
+.hero { background: var(--surface); border: 1px solid var(--edge); border-radius: 10px; padding: 26px 24px; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
+.hero .big { font-size: clamp(56px, 8vw, 84px); font-weight: 600; letter-spacing: -0.03em; line-height: 1; }
+.hero p { color: var(--ink-2); max-width: 36ch; }
+.principles { display: grid; gap: 12px; }
+.principles .card h3 { font-size: 16px; margin-bottom: 6px; }
+.principles .card p { color: var(--ink-2); font-size: 15px; }
+.steps { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 0; counter-reset: s; }
+.steps li { position: relative; padding: 0 0 22px 52px; }
+.steps li::before { counter-increment: s; content: counter(s, decimal); position: absolute; left: 0; top: 0; width: 34px; height: 34px; border-radius: 50%; background: var(--raise); border: 1px solid var(--axis); display: grid; place-items: center; font: 500 14px/1 var(--mono); }
+.steps li::after { content: ""; position: absolute; left: 17px; top: 38px; bottom: 4px; width: 1px; background: var(--line); }
+.steps li:last-child::after { display: none; }
+.steps h3 { font-size: 17px; margin-bottom: 4px; padding-top: 5px; }
+.steps p { color: var(--ink-2); max-width: 70ch; }
+.closing { margin-top: 8px; max-width: 70ch; }
+
+/* limites et sources */
+ul.plain { margin: 0; padding-left: 20px; display: grid; gap: 10px; max-width: 74ch; }
+ul.plain li::marker { color: var(--ink-2); }
+.sources { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.sources li { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 4px 16px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+.sources li > span { color: var(--ink-2); font-size: 13px; padding-top: 2px; }
+footer { margin-top: 56px; padding: 26px 0 48px; border-top: 1px solid var(--line); color: var(--ink-2); font-size: 14px; }
+
+@media (max-width: 860px) {
+  .figs, .sim, .vision-top { grid-template-columns: minmax(0, 1fr); }
+  .item dl { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .item dd { margin-bottom: 8px; }
+  .sources li { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 480px) {
+  header.top { padding-top: 36px; }
+  .tile .val { font-size: 38px; }
+  .nav b { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="Sections">
+  <div class="wrap">
+    <b>Analyse critique</b>
+    <a href="#verdict">Verdict</a>
+    <a href="#mecanisme">Mécanisme</a>
+    <a href="#constats">Constats</a>
+    <a href="#simulateur">Simulateur</a>
+    <a href="#cache">Cache</a>
+    <a href="#vision">Ma vision</a>
+    <a href="#sources">Sources</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<header class="top" id="verdict">
+  <p class="eyebrow">Analyse critique · 25 nov. 2026</p>
+  <h1>Orchestrer les modèles : ce qui tient, ce qui ne tient pas</h1>
+  <p class="lede">Revue du document « Orchestrer les modèles : un premier cadre » (Instinct Files, 24 nov. 2026) : faits recoupés, calculs refaits, angles morts et ma vision du sujet.</p>
+  <p class="verdict">La structure du cadre est saine : validateur objectif comme condition d'escalade, métrique « coût par tâche réussie », trois phases, garde-fous. Ses chiffres sont plus fragiles que son ton. Il reprend l'erreur du 0,06&nbsp;$, appuie plusieurs lignes sur des benchmarks qui ne disent pas ce qu'on leur fait dire, et ignore deux coûts qui peuvent absorber une grande part des économies annoncées : le cache et la gouvernance d'un second fournisseur.</p>
+
+  <div class="tiles">
+    <div class="tile k-erreur">
+      <span class="pill k-erreur"><svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="7"/><path d="M4.6 4.6l4.8 4.8M9.4 4.6L4.6 9.4"/></svg>Erreur</span>
+      <div class="val">0,25&nbsp;$</div>
+      <p><b>par essai réussi pour DeepSeek V4.1 Flash.</b> Le document écrit 0,06&nbsp;$ (VentureBeat : 1&nbsp;$ pour 15 tentatives, 4 réussites).</p>
+    </div>
+    <div class="tile k-nuancer">
+      <span class="pill k-nuancer"><svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="7"/><path d="M7 3.8v3.6M7 9.6v.2"/></svg>À nuancer</span>
+      <div class="val">23&nbsp;%</div>
+      <p><b>d'économie réelle de la cascade sur le pilote (4/15).</b> Le document laisse entendre ×10 à ×80, qui n'est que le ratio de prix.</p>
+    </div>
+    <div class="tile k-nuancer">
+      <span class="pill k-nuancer"><svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="7"/><path d="M7 3.8v3.6M7 9.6v.2"/></svg>À nuancer</span>
+      <div class="val">5&nbsp;/&nbsp;10</div>
+      <p><b>lignes de la table de routage qui citent un chiffre.</b> Le texte promet « chaque ligne ».</p>
+    </div>
+    <div class="tile k-angle">
+      <span class="pill k-angle"><svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="7"/><path d="M7 3.8v3.6M7 9.6v.2"/></svg>Angle mort</span>
+      <div class="val">8&nbsp;%</div>
+      <p><b>de cache-hit après un changement de modèle</b>, contre 90&nbsp;% dans un tour (étude Microsoft, rapportée par un article).</p>
+    </div>
+  </div>
+</header>
+
+<section id="mecanisme" aria-labelledby="h-meca">
+  <div class="sec-head">
+    <span class="num">01 · Mécanisme</span>
+    <h2 id="h-meca">Deux architectures qui vont en sens contraire</h2>
+    <p>Le document s'appuie sur l'orchestrateur d'Anthropic pour justifier sa cascade. Ce sont deux patterns différents : le travail ne circule pas dans le même sens, et le coût de cache non plus.</p>
+  </div>
+
+  <div class="figs">
+    <figure>
+      <p class="sub">Le document</p>
+      <h3>Cascade : le modèle économique d'abord</h3>
+      <div class="scroll-x">
+      <svg class="diag" id="svgA" viewBox="0 0 520 290" role="img" aria-label="Cascade du document : la tâche passe par Flash, un validateur juge ; en cas de succès elle est livrée, en cas d'échec Opus 5.5 reprend avec la sortie fautive recopiée et un cache froid.">
+        <defs>
+          <marker id="ah1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+        </defs>
+        <rect class="node" x="10" y="40" width="90" height="44" rx="6"/>
+        <text class="t-main" x="55" y="67" text-anchor="middle">Tâche</text>
+        <rect class="node cheap" x="140" y="40" width="90" height="44" rx="6"/>
+        <text class="t-main" x="185" y="67" text-anchor="middle">Flash</text>
+        <text class="t-sub" x="185" y="104" text-anchor="middle">0,07 $ / tentative</text>
+        <rect class="node" x="270" y="40" width="90" height="44" rx="6"/>
+        <text class="t-main" x="315" y="67" text-anchor="middle">Validateur</text>
+        <text class="t-sub" x="315" y="31" text-anchor="middle">tests · build · lint</text>
+        <rect class="node" x="400" y="40" width="90" height="44" rx="6"/>
+        <text class="t-main" x="445" y="67" text-anchor="middle">Livré</text>
+        <rect class="node strong" x="270" y="190" width="90" height="44" rx="6"/>
+        <text class="t-main" x="315" y="217" text-anchor="middle">Opus 5.5</text>
+        <text class="t-sub" x="315" y="254" text-anchor="middle">1,93 $ / tentative</text>
+        <path class="edge" d="M100,62 L137,62" marker-end="url(#ah1)"/>
+        <path class="edge" d="M230,62 L267,62" marker-end="url(#ah1)"/>
+        <path class="edge" d="M360,62 L397,62" marker-end="url(#ah1)"/>
+        <text class="t-edge" x="379" y="52" text-anchor="middle">ok</text>
+        <path class="edge" d="M315,84 L315,187" marker-end="url(#ah1)"/>
+        <text class="t-edge" x="324" y="124">échec</text>
+        <text class="t-edge" x="324" y="141">sortie fautive recopiée</text>
+        <text class="t-edge" x="324" y="158">cache froid</text>
+        <path class="edge" d="M360,212 L445,212 L445,87" marker-end="url(#ah1)"/>
+        <text class="t-edge" x="402" y="204" text-anchor="middle">résolu</text>
+      </svg>
+      </div>
+      <figcaption>Le modèle économique tente, le validateur juge, le modèle fort reprend avec la sortie fautive en contexte. L'escalade repart d'un cache froid.</figcaption>
+    </figure>
+
+    <figure>
+      <p class="sub">Anthropic</p>
+      <h3>Orchestrateur : le modèle le plus fort d'abord</h3>
+      <div class="scroll-x">
+      <svg class="diag" id="svgB" viewBox="0 0 520 290" role="img" aria-label="Orchestrateur d'Anthropic : Fable 5.2 planifie, délègue les tâches simples à Opus 5.5 et Sonnet 5.5, qui lui rapportent leur travail ; Fable relit.">
+        <defs>
+          <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+        </defs>
+        <rect class="node strong" x="170" y="20" width="180" height="58" rx="6"/>
+        <text class="t-main" x="260" y="45" text-anchor="middle">Fable 5.2</text>
+        <text class="t-sub" x="260" y="63" text-anchor="middle">orchestrateur · plan et relecture</text>
+        <rect class="node cheap" x="40" y="200" width="120" height="58" rx="6"/>
+        <text class="t-main" x="100" y="225" text-anchor="middle">Opus 5.5</text>
+        <text class="t-sub" x="100" y="243" text-anchor="middle">worker</text>
+        <rect class="node cheap" x="360" y="200" width="120" height="58" rx="6"/>
+        <text class="t-main" x="420" y="225" text-anchor="middle">Sonnet 5.5</text>
+        <text class="t-sub" x="420" y="243" text-anchor="middle">worker</text>
+        <path class="edge" d="M225,80 L108,197" marker-start="url(#ah2)" marker-end="url(#ah2)"/>
+        <path class="edge" d="M295,80 L412,197" marker-start="url(#ah2)" marker-end="url(#ah2)"/>
+        <text class="t-edge" x="260" y="136" text-anchor="middle">↓ délègue les tâches simples</text>
+        <text class="t-edge" x="260" y="153" text-anchor="middle">↑ rapporte, Fable relit</text>
+      </svg>
+      </div>
+      <figcaption>Le plus fort planifie, délègue les tâches simples à Opus 5.5 ou Sonnet 5.5, puis relit. Le travail descend du plus fort vers le moins cher. Il existe aussi un mode conseiller : Opus ou Sonnet consultent Fable sur les points durs.</figcaption>
+    </figure>
+  </div>
+
+  <div class="diag-bar">
+    <span class="dot-key"><i style="background:var(--blue)"></i>travail du modèle économique ou worker</span>
+    <span class="dot-key"><i style="background:var(--orange)"></i>travail du modèle fort</span>
+    <button class="btn" id="pauseBtn" type="button" aria-pressed="false">Mettre l'animation en pause</button>
+  </div>
+  <p class="takeaway">Anthropic recommande d'ailleurs Opus 5.5 comme modèle par défaut, et décrit une délégation descendante. Invoquer ce pattern pour légitimer une cascade « économique d'abord » est un raccourci.</p>
+</section>
+
+<section id="constats" aria-labelledby="h-cons">
+  <div class="sec-head">
+    <span class="num">02 · Constats</span>
+    <h2 id="h-cons">Constat par constat</h2>
+    <p>Chaque ligne indique ce que dit le document, puis ce que montrent les sources. Les erreurs viennent en premier, les points confirmés en dernier.</p>
+  </div>
+  <div class="filters" role="group" aria-label="Filtrer les constats">
+    <button class="btn" type="button" data-f="all" aria-pressed="true">Tout</button>
+    <button class="btn" type="button" data-f="erreur" aria-pressed="false">Erreur</button>
+    <button class="btn" type="button" data-f="nuancer" aria-pressed="false">À nuancer</button>
+    <button class="btn" type="button" data-f="angle" aria-pressed="false">Angles morts</button>
+    <button class="btn" type="button" data-f="ok" aria-pressed="false">Confirmé</button>
+    <span class="count" id="count" aria-live="polite"></span>
+  </div>
+  <div class="list" id="list"></div>
+</section>
+
+<section id="simulateur" aria-labelledby="h-sim">
+  <div class="sec-head">
+    <span class="num">03 · Simulateur</span>
+    <h2 id="h-sim">Ce que la cascade économise vraiment</h2>
+    <p>Le ratio de prix entre deux modèles n'est qu'un plafond. L'économie dépend de la part des tâches que le petit modèle réussit, et de ce que coûte l'escalade quand il échoue. Réglez les curseurs : le réglage de départ reproduit le pilote VentureBeat (15 bugs réels).</p>
+  </div>
+
+  <div class="sim">
+    <div class="card controls">
+      <div class="ctl">
+        <div class="presets" role="group" aria-label="Scénarios">
+          <button class="btn" type="button" data-p="26.7" aria-pressed="true">Pilote 4/15</button>
+          <button class="btn" type="button" data-p="50" aria-pressed="false">Une tâche sur deux</button>
+          <button class="btn" type="button" data-p="90" aria-pressed="false">Tâches faciles</button>
+        </div>
+        <p class="hint">Les deux derniers scénarios sont illustratifs : le document ne donne aucun taux de réussite pour les tâches faciles.</p>
+      </div>
+      <div class="ctl">
+        <label for="inP">Taux de réussite de Flash (p) <output id="outP" for="inP">26,7 %</output></label>
+        <input id="inP" type="range" min="0" max="100" step="0.1" value="26.7">
+      </div>
+      <div class="ctl">
+        <label for="inR">Ratio de coût par tentative, Opus / Flash (r) <output id="outR" for="inR">29×</output></label>
+        <input id="inR" type="range" min="5" max="100" step="1" value="29">
+        <p class="hint">Le pilote donne 1,93 $ contre 0,07 $, soit environ 29×.</p>
+      </div>
+      <div class="ctl">
+        <label for="inS">Surcoût d'escalade (s) <output id="outS" for="inS">+0 %</output></label>
+        <input id="inS" type="range" min="0" max="50" step="5" value="0">
+        <p class="hint">Cache froid et sortie fautive recopiée : l'entrée d'Opus se paie plein tarif.</p>
+      </div>
+      <div class="formula" aria-label="Formule">économie = p − 1/r − (1 − p) × s</div>
+      <p class="assume">Hypothèses : validateur parfait ; coût de 1,93 $ par tentative d'Opus (pilote, 15 tâches) ; Flash ne résout rien qu'Opus ne résoudrait pas, donc la qualité finale est celle d'Opus seul.</p>
+    </div>
+
+    <div>
+      <div class="out" aria-live="polite">
+        <div class="tile"><p>Économie par tâche</p><div class="val" id="oSave">23 %</div></div>
+        <div class="tile"><p>Coût moyen par tâche, cascade</p><div class="val" id="oCost">1,48 $</div><p id="oBase">Opus seul : 1,93 $</p></div>
+        <div class="tile"><p>Plafond, même avec un petit modèle gratuit</p><div class="val" id="oCap">27 %</div></div>
+      </div>
+      <div class="card">
+        <div class="legend" id="legend"></div>
+        <div class="chartwrap" id="chartWrap" tabindex="0" aria-label="Graphique de l'économie selon le taux de réussite. Flèches gauche et droite pour parcourir les valeurs.">
+          <svg id="chart" viewBox="0 0 760 340" role="img" aria-label="Économie de la cascade selon le taux de réussite de Flash"></svg>
+          <div class="tip" id="tip" hidden></div>
+        </div>
+        <div class="chart-foot">
+          <p id="chartNote">L'économie est plafonnée par p. Le surcoût d'escalade fait passer la cascade sous Opus seul quand p est faible.</p>
+          <button class="btn" id="tblBtn" type="button" aria-pressed="false" aria-controls="tblWrap">Afficher le tableau</button>
+        </div>
+        <div class="tbl-wrap" id="tblWrap" hidden></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="cache" aria-labelledby="h-cache">
+  <div class="sec-head">
+    <span class="num">04 · Le coût qu'on oublie</span>
+    <h2 id="h-cache">Changer de modèle vide le cache</h2>
+    <p>Dans une session d'agent, l'entrée domine largement la sortie. Quand le modèle change, le préfixe déjà calculé ne sert plus. Pour Opus 5.5, une entrée en cache coûte 0,20 $ le million de tokens contre 4 $ hors cache, soit 20× de plus.</p>
+  </div>
+  <div class="card">
+    <div class="chartwrap" id="cacheWrap">
+      <svg id="cacheChart" viewBox="0 0 760 210" role="img" aria-label="Taux de cache-hit : 90 % dans un même tour, 55 % entre deux tours sur le même modèle, 8 % après un changement de modèle."></svg>
+      <div class="tip" id="tip2" hidden></div>
+    </div>
+    <div class="chart-foot">
+      <p>Source : étude Azure Research et UIUC sur 13,5 millions de sessions GitHub Copilot (juin 2026), chiffres rapportés par un article de Towards Data Science et non vérifiés dans le papier. Environ 6,4 % des sessions y changent de modèle, le plus souvent pour une erreur ou une limite de débit.</p>
+    </div>
+    <table class="sr-only"><caption>Taux de cache-hit</caption><tr><th>Situation</th><th>Taux</th></tr><tr><td>Dans un même tour</td><td>90 %</td></tr><tr><td>Entre deux tours, même modèle</td><td>55 %</td></tr><tr><td>Après un changement de modèle</td><td>8 %</td></tr></table>
+  </div>
+</section>
+
+<section id="vision" aria-labelledby="h-vis">
+  <div class="sec-head">
+    <span class="num">05 · Ma vision</span>
+    <h2 id="h-vis">Mesurer d'abord, router ensuite</h2>
+  </div>
+
+  <div class="vision-top">
+    <div class="hero">
+      <div class="big">20–50&nbsp;%</div>
+      <p>d'économie réaliste à viser, pas ×10 à ×80. C'est un ordre de grandeur, à confirmer par ta propre mesure.</p>
+    </div>
+    <div class="principles">
+      <div class="card">
+        <h3>Le routeur est d'abord un instrument de mesure</h3>
+        <p>La table sera périmée dans quelques semaines : V4.1 Flash le 10 sept., sa mise à jour le 17 oct., Fable 5.2 le 9 nov. Ce qui dure, ce sont les validateurs, le registre et l'échantillon fantôme. La table n'est que de la configuration.</p>
+      </div>
+      <div class="card">
+        <h3>Router sur plusieurs axes</h3>
+        <p>Modèle, effort de raisonnement, contexte et état de session. Changer de modèle est un achat dont le prix dépend du contexte que le nouveau modèle n'a pas encore vu.</p>
+      </div>
+      <div class="card">
+        <h3>Choisir le pattern selon la granularité</h3>
+        <p>Cascade par tâche pour le court et le vérifiable. Pour les longues sessions agentiques, orchestrateur frontier avec workers peu chers, ou changement aux frontières de phase, jamais requête par requête.</p>
+      </div>
+    </div>
+  </div>
+
+  <ol class="steps">
+    <li>
+      <h3>Mesurer où partent les tokens</h3>
+      <p>Avec le suivi d'usage actuel. Si l'essentiel de la dépense est du cache de sessions longues, les gains viendront du cache, de l'effort et du contexte plutôt que du changement de modèle.</p>
+    </li>
+    <li>
+      <h3>Capter l'essentiel chez Anthropic</h3>
+      <p>Un palier Sonnet ou Haiku, les niveaux d'effort d'Opus, Fable en conseiller pour les specs. Pas de nouveau fournisseur, donc pas de nouveau périmètre de gouvernance. Les prix de Sonnet et Haiku ne sont pas vérifiés ici.</p>
+    </li>
+    <li>
+      <h3>Faire entrer Flash comme challenger</h3>
+      <p>Sur le même harnais, avec un échantillon fantôme de 5 à 10 % envoyé à Opus et des tests cachés. Auto-hébergé ou chez un hébergeur européen si les données le permettent, après avis juridique.</p>
+    </li>
+    <li>
+      <h3>Activer la cascade là où elle paie</h3>
+      <p>Tâches courtes, vérifiables, avec un taux de réussite mesuré pour le petit modèle. Le coût visé est le coût par tâche acceptée en revue, pas seulement celle dont le validateur passe.</p>
+    </li>
+  </ol>
+  <p class="closing">Cela rejoint une logique de validation humaine à chaque étape : specs et architecture au meilleur modèle avec validation humaine, implémentation vérifiable en cascade.</p>
+</section>
+
+<section aria-labelledby="h-lim">
+  <div class="sec-head">
+    <span class="num">06 · Limites</span>
+    <h2 id="h-lim">Ce que cette analyse ne couvre pas</h2>
+  </div>
+  <ul class="plain">
+    <li>Le protocole du match TeamLeave n'a pas été vu (le premier document était privé) : je ne juge pas le plan de calibration.</li>
+    <li>Le score WebDev de Flash (1 659) n'est pas vérifié. Arena m'a opposé une vérification anti-bot, que je n'ai pas contournée. Sur Image-to-WebDev, l'écart Opus–Flash est d'environ 145 points, du même ordre.</li>
+    <li>Les chiffres de cache viennent d'un article qui rapporte l'étude Microsoft, pas du papier lu en entier.</li>
+  </ul>
+</section>
+
+<section id="sources" aria-labelledby="h-src">
+  <div class="sec-head">
+    <span class="num">07 · Sources</span>
+    <h2 id="h-src">Sources</h2>
+  </div>
+  <ul class="sources">
+    <li><span>Document analysé</span><a href="https://files.instinct.com/mgv1iz0703xg-orchestrer-les-modeles-un-premier-cadre" target="_blank" rel="noopener">Orchestrer les modèles : un premier cadre (Instinct Files)</a></li>
+    <li><span>Anthropic, Fable 5.2</span><div><a href="https://thenewstack.io/anthropic-fable-opus-cost/" target="_blank" rel="noopener">The New Stack</a> · <a href="https://claudelog.com/faqs/what-is-claude-fable-5-2/" target="_blank" rel="noopener">ClaudeLog (prix, cache)</a></div></li>
+    <li><span>SpecBench</span><div><a href="https://arxiv.org/abs/2605.30314" target="_blank" rel="noopener">Hamblin et al., arXiv 2605.30314</a> · <a href="https://arxiv.org/abs/2605.21384" target="_blank" rel="noopener">reward hacking, arXiv 2605.21384</a></div></li>
+    <li><span>SAKE</span><a href="https://arxiv.org/abs/2606.29520" target="_blank" rel="noopener">Santilli et al., arXiv 2606.29520</a></li>
+    <li><span>DeepSeek V4.1 Flash</span><div><a href="https://www.datacamp.com/blog/deepseek-v4-1-flash" target="_blank" rel="noopener">DataCamp</a> · <a href="https://thenextweb.com/news/deepseek-v4-1-flash-launch-v4-pro-retired-price-cut" target="_blank" rel="noopener">TNW</a> · <a href="https://www.morphllm.com/deepseek-v4-1" target="_blank" rel="noopener">Morph (builds 0910 et 1017)</a></div></li>
+    <li><span>WebDev Arena</span><div><a href="https://arena.ai/leaderboard/code/webdev/models/claude-opus-5.5-max-7pga" target="_blank" rel="noopener">Arena, Claude Opus 5.5</a> · <a href="https://www.neoteo.com/en/claude-opus-55-leads-the-reported-november-webdev-arena-ranking" target="_blank" rel="noopener">NeoTeo, classement de novembre</a></div></li>
+    <li><span>Cache et changement de modèle</span><div><a href="https://www.microsoft.com/en-us/research/publication/agentic-coding-in-the-wild-characterizing-github-copilot-at-production-scale/" target="_blank" rel="noopener">Microsoft, Agentic Coding in the Wild</a> · <a href="https://towardsdatascience.com/the-hidden-cost-of-llm-routing-why-switching-models-costs-more/" target="_blank" rel="noopener">Towards Data Science</a></div></li>
+    <li><span>Routage et cascades</span><div><a href="https://cs224r.stanford.edu/projects/pdfs/Mauricio%20Berlanga%20Carrillo%20submission_416263800/final.pdf" target="_blank" rel="noopener">Stanford CS224R (projet étudiant)</a> · <a href="https://arxiv.org/pdf/2605.18859" target="_blank" rel="noopener">TwinRouterBench</a></div></li>
+    <li><span>Pilote de correction de bugs</span>VentureBeat (Fable, Opus, Kimi, DeepSeek Flash), vérifié dans l'analyse précédente</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">Analyse du 25 nov. 2026 · Document analysé : « Orchestrer les modèles : un premier cadre », Instinct Files, 24 nov. 2026.</div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+  var NS = "http://www.w3.org/2000/svg";
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- utilitaires ---------- */
+  function el(name, attrs, parent) {
+    var n = document.createElementNS(NS, name);
+    for (var k in attrs) { n.setAttribute(k, attrs[k]); }
+    if (parent) { parent.appendChild(n); }
+    return n;
+  }
+  function fr(x, d) {
+    return x.toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).replace("-", "−");
+  }
+  function pct(x, d) { return fr(x * 100, d || 0) + " %"; }
+  function usd(x) { return fr(x, 2) + " $"; }
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+  /* ---------- navigation par ancres ---------- */
+  document.querySelectorAll('.nav a').forEach(function (a) {
+    a.addEventListener("click", function (e) {
+      var t = document.getElementById(a.getAttribute("href").slice(1));
+      if (t) { e.preventDefault(); t.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }); }
+    });
+  });
+
+  /* ---------- schémas animés ---------- */
+  function addDot(svg, d, color, start, move, cycle) {
+    var c = el("circle", { r: 5, fill: color, stroke: "#191919", "stroke-width": 2, opacity: 0 }, svg);
+    var t0 = start / cycle, t1 = (start + move) / cycle, e = 0.004;
+    var m = el("animateMotion", {
+      dur: cycle + "s", repeatCount: "indefinite", path: d, calcMode: "linear",
+      keyTimes: "0;" + t0 + ";" + t1 + ";1", keyPoints: "0;0;1;1"
+    }, c);
+    el("animate", {
+      attributeName: "opacity", dur: cycle + "s", repeatCount: "indefinite", calcMode: "linear",
+      keyTimes: "0;" + t0 + ";" + (t0 + e) + ";" + t1 + ";" + (t1 + e) + ";1",
+      values: "0;0;1;1;0;0"
+    }, c);
+  }
+  var svgA = document.getElementById("svgA");
+  var svgB = document.getElementById("svgB");
+  if (!reduce) {
+    var blue = "#338ced", orange = "#e76624", cycA = 11.5;
+    addDot(svgA, "M55,62 L445,62", blue, 0, 3.5, cycA);
+    addDot(svgA, "M55,62 L315,62", blue, 4.2, 2.4, cycA);
+    addDot(svgA, "M315,62 L315,212 L445,212 L445,62", orange, 6.6, 3.9, cycA);
+    var cycB = 7;
+    addDot(svgB, "M225,80 L108,197", orange, 0, 1.6, cycB);
+    addDot(svgB, "M295,80 L412,197", orange, 0, 1.6, cycB);
+    addDot(svgB, "M108,197 L225,80", blue, 3.2, 1.6, cycB);
+    addDot(svgB, "M412,197 L295,80", blue, 3.2, 1.6, cycB);
+  }
+  var pauseBtn = document.getElementById("pauseBtn");
+  if (reduce) { pauseBtn.hidden = true; }
+  pauseBtn.addEventListener("click", function () {
+    var paused = pauseBtn.getAttribute("aria-pressed") === "true";
+    [svgA, svgB].forEach(function (s) { if (paused) { s.unpauseAnimations(); } else { s.pauseAnimations(); } });
+    pauseBtn.setAttribute("aria-pressed", String(!paused));
+    pauseBtn.textContent = paused ? "Mettre l'animation en pause" : "Reprendre l'animation";
+  });
+
+  /* ---------- constats ---------- */
+  var ICON = {
+    erreur: '<svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="7"/><path d="M4.6 4.6l4.8 4.8M9.4 4.6L4.6 9.4"/></svg>',
+    nuancer: '<svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="7"/><path d="M7 3.8v3.6M7 9.6v.2"/></svg>',
+    angle: '<svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="7"/><path d="M7 3.8v3.6M7 9.6v.2"/></svg>',
+    ok: '<svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="7"/><path d="M4 7.4l2 2 4-4.4"/></svg>'
+  };
+  var LABEL = { erreur: "Erreur", nuancer: "À nuancer", angle: "Angle mort", ok: "Confirmé" };
+  var HEAD = {
+    erreur: ["Le document dit", "Les sources montrent"],
+    nuancer: ["Le document dit", "Les sources montrent"],
+    angle: ["Ce qui manque", "Pourquoi ça compte"],
+    ok: ["Affirmation", "Vérification"]
+  };
+  var ITEMS = [
+    { k: "erreur", t: "« 0,06 $ par essai réussi »",
+      a: "Lignes Budget et Code avec validateurs : 3,22&nbsp;$ pour Opus 5.5 contre 0,06&nbsp;$ pour Flash.",
+      b: "VentureBeat donne 0,25&nbsp;$ par essai réussi (1&nbsp;$ pour 15 tentatives, 4 réussites). Le 0,06&nbsp;$ ressemble au coût moyen par tentative (1/15 ≈ 0,067&nbsp;$). Flash reste environ 13× moins cher, mais la valeur citée est fausse." },
+    { k: "nuancer", t: "La cascade économise ×10 à ×80",
+      a: "Le petit modèle d'abord divise le coût par 10 à 80.",
+      b: "Le ratio de prix n'est qu'un plafond. Avec Flash à 4/15 et un validateur parfait, la cascade coûte 1,48&nbsp;$ par tâche contre 1,93&nbsp;$ pour Opus seul, soit −23&nbsp;%. L'économie suit le taux de réussite du petit modèle, et le document n'en donne aucun pour les tâches « faciles »." },
+    { k: "nuancer", t: "SAKE : architecture à qualité maximale, contexte dosé",
+      a: "Le raisonnement d'arbitrage est la catégorie la plus faible de tous les modèles, et plus de contexte la dégrade.",
+      b: "SAKE est un QCM de connaissances testant 11 modèles, dont aucun Claude 5.x ni V4.1 Flash (au mieux Opus 4.6). La catégorie la plus faible (ASO, « solutions architecturales ») reste à 88–89&nbsp;% en moyenne. Le « contexte » désigne la longueur de l'énoncé (−9 points sur ASO, car les distracteurs sont plus plausibles), pas le contexte d'un agent." },
+    { k: "nuancer", t: "SpecBench justifie Opus 5.5 pour les specs",
+      a: "Personne n'excelle (44 %) : le meilleur raisonneur disponible, plus un humain.",
+      b: "Le meilleur agent du benchmark est GPT-5.4 (44,4&nbsp;%, mai 2026) et aucun Opus 5.5 n'y figure. Par la hiérarchie du document lui-même, « le meilleur raisonneur disponible » serait plutôt Fable 5.2." },
+    { k: "nuancer", t: "L'orchestrateur d'Anthropic légitime la cascade",
+      a: "Le routage est la direction que prend l'industrie, Fable 5.2 orchestrant des workers Opus 5.5.",
+      b: "Vrai, mais la délégation va du plus fort vers le moins cher. Le document propose l'inverse, le petit modèle d'abord. Anthropic recommande Opus 5.5 comme défaut." },
+    { k: "nuancer", t: "« Chaque ligne cite le chiffre qui la justifie »",
+      a: "La table de routage s'appuie sur un chiffre par ligne.",
+      b: "Cinq lignes sur dix seulement en citent un : Architecture, Refactoring, Résumés, Latence et Données sensibles n'en ont pas. Le 98,2&nbsp;% du SWE-bench Verified, benchmark saturé, justifie Opus pour le backend, alors que le document dit lui-même que les tâches saturées ne discriminent pas." },
+    { k: "nuancer", t: "« Jamais Flash par défaut » pour les données sensibles",
+      a: "Les données sensibles vont à Opus 5.5 ou à un modèle local.",
+      b: "Flash est publié sous licence MIT (poids ouverts, MoE de 552 milliards de paramètres). C'est l'API DeepSeek qu'il faut écarter par défaut : l'auto-hébergement ou un hébergeur tiers reste possible, à instruire juridiquement." },
+    { k: "nuancer", t: "Une version de Flash non épinglée",
+      a: "« V4.1 Flash » sans autre précision.",
+      b: "Arena classe séparément les builds 0910 et 1017, avec des scores différents. Le document ne dit pas lequel il mesure, alors qu'il demande lui-même d'épingler les versions." },
+    { k: "angle", t: "Le cache et le changement de modèle",
+      a: "Le registre suit tokens et coût, pas l'état du cache.",
+      b: "Cache-hit d'environ 90&nbsp;% dans un tour, 55&nbsp;% entre tours, 8&nbsp;% après un changement de modèle (étude Microsoft, via un article). Escalader en recopiant la sortie fautive paie l'entrée plein tarif : pour Opus, 0,20&nbsp;$ en cache contre 4&nbsp;$, soit 20×." },
+    { k: "angle", t: "Le biais de sélection du journal",
+      a: "Le journal d'apprentissage ne voit que ce qui a été routé.",
+      b: "On n'apprend jamais ce qu'Opus aurait fait sur les tâches confiées à Flash. Il faut un échantillon fantôme de 5 à 10&nbsp;% envoyé à Opus pour mesurer la perte de qualité." },
+    { k: "angle", t: "« Réussi » veut dire « le validateur passe »",
+      a: "Le succès est décidé par les tests visibles.",
+      b: "Réussi n'est pas accepté en revue. Prévoir des tests cachés (un autre papier nommé SpecBench mesure l'écart entre tests visibles et cachés) et suivre le coût par tâche acceptée." },
+    { k: "angle", t: "Un classifieur sans cible d'erreur",
+      a: "Un petit modèle et des règles attribuent type et difficulté.",
+      b: "Aucun taux d'erreur visé ni coût d'un mauvais routage, alors que toute la table dépend de cette étape." },
+    { k: "angle", t: "Des axes absents : l'effort et le palier intermédiaire",
+      a: "Le choix se réduit à deux modèles.",
+      b: "Selon Anthropic, Fable 5.2 en effort High (45,3&nbsp;%) égale le meilleur Opus 5.5 (45,5&nbsp;%) à environ moitié coût par tâche. Aucun palier intermédiaire n'est envisagé : Sonnet 5.5 est à 1&nbsp;773 sur WebDev, 45 points sous Opus." },
+    { k: "angle", t: "Le coût de gouvernance d'un second fournisseur",
+      a: "La façade multi-fournisseurs est présentée comme un avantage.",
+      b: "DPA, rétention, facturation, suivi d'usage hors des outils natifs d'Anthropic : ce coût n'entre pas dans le calcul des économies." },
+    { k: "ok", t: "Fable 5.2 comme orchestrateur",
+      a: "Anthropic décrit Fable 5.2 comme orchestrateur de workers Opus 5.5.",
+      b: "Confirmé : Fable délègue des tâches simples à Opus 5.5 ou Sonnet 5.5 (The New Stack, citant Anthropic)." },
+    { k: "ok", t: "SpecBench à 44 %",
+      a: "Le meilleur agent plafonne à 44 % de défauts détectés.",
+      b: "Confirmé : 44,4&nbsp;% pour GPT-5.4 (arXiv, 28 mai 2026)." },
+    { k: "ok", t: "WebDev Arena autour de 1 820 pour Opus 5.5",
+      a: "Opus 5.5 à 1 820 Elo sur WebDev Arena.",
+      b: "Confirmé : 1&nbsp;818 le 23 septembre, 1&nbsp;810 dans le rapport de novembre. Le score de Flash (1&nbsp;659) n'est pas vérifié." },
+    { k: "ok", t: "« 10 à 80 fois moins cher par tâche »",
+      a: "Flash coûte entre 10 et 80 fois moins cher par tâche qu'Opus 5.5.",
+      b: "Cohérent avec mes recalculs : de 13× à 82× selon les benchmarks. Le bas de la fourchette est cohérent avec le 0,25&nbsp;$, pas avec le 0,06&nbsp;$." },
+    { k: "ok", t: "Terminal-Bench 4.1 : 65,8 % contre 38,5 %",
+      a: "L'écart relatif le plus brutal du comparatif.",
+      b: "Cohérent avec le tableau Snorkel en direct que j'ai vérifié dans l'analyse précédente." },
+    { k: "ok", t: "La règle d'or du validateur objectif",
+      a: "Une escalade n'est possible que si un validateur objectif peut déclarer l'échec.",
+      b: "Cohérent avec un projet étudiant de Stanford (EvalPlus, niveau fonction) : cheap-then-escalate avec vérificateur visible atteint la qualité de Sonnet 4.6 pour 19–23&nbsp;% du coût normalisé. Preuve modeste, mais dans le même sens." }
+  ];
+  var list = document.getElementById("list");
+  ITEMS.forEach(function (it) {
+    var art = document.createElement("article");
+    art.className = "item k-" + it.k;
+    art.dataset.k = it.k;
+    var row = document.createElement("div"); row.className = "row";
+    var h = document.createElement("h3"); h.textContent = it.t;
+    var pill = document.createElement("span"); pill.className = "pill k-" + it.k;
+    pill.innerHTML = ICON[it.k] + LABEL[it.k];
+    row.appendChild(h); row.appendChild(pill);
+    var dl = document.createElement("dl");
+    var h0 = document.createElement("dt"); h0.textContent = HEAD[it.k][0];
+    var d0 = document.createElement("dd"); d0.innerHTML = it.a;
+    var h1 = document.createElement("dt"); h1.textContent = HEAD[it.k][1];
+    var d1 = document.createElement("dd"); d1.innerHTML = it.b;
+    dl.append(h0, d0, h1, d1);
+    art.append(row, dl);
+    list.appendChild(art);
+  });
+  var count = document.getElementById("count");
+  function applyFilter(f) {
+    var n = 0;
+    list.querySelectorAll(".item").forEach(function (a) {
+      var show = f === "all" || a.dataset.k === f;
+      a.hidden = !show; if (show) { n++; }
+    });
+    count.textContent = n + (n > 1 ? " constats" : " constat");
+    document.querySelectorAll(".filters .btn").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b.dataset.f === f));
+    });
+  }
+  document.querySelectorAll(".filters .btn").forEach(function (b) {
+    b.addEventListener("click", function () { applyFilter(b.dataset.f); });
+  });
+  applyFilter("all");
+
+  /* ---------- infobulle ---------- */
+  function tipRows(tip, head, rows) {
+    tip.replaceChildren();
+    var h = document.createElement("div"); h.className = "tip-h"; h.textContent = head; tip.appendChild(h);
+    rows.forEach(function (r) {
+      var d = document.createElement("div"); d.className = "tip-r";
+      var k = document.createElement("span"); k.className = "tip-k"; k.style.background = r.color;
+      var v = document.createElement("strong"); v.textContent = r.value;
+      var n = document.createElement("span"); n.className = "tip-n"; n.textContent = r.name;
+      d.append(k, v, n); tip.appendChild(d);
+    });
+  }
+  function placeTip(tip, wrap, px) {
+    tip.hidden = false;
+    var w = wrap.clientWidth, tw = tip.offsetWidth;
+    tip.style.left = clamp(px - tw / 2, 4, w - tw - 4) + "px";
+  }
+
+  /* ---------- simulateur ---------- */
+  var CO = 1.932, PILOT = 0.267;
+  var st = { p: 0.267, r: 29, s: 0, hp: null };
+  var inP = document.getElementById("inP"), inR = document.getElementById("inR"), inS = document.getElementById("inS");
+  function save(p, r, s) { return p - 1 / r - (1 - p) * s; }
+
+  var W = 760, H = 340, M = { l: 58, r: 24, t: 26, b: 48 };
+  var X0 = M.l, X1 = W - M.r, Y0 = M.t, Y1 = H - M.b, YMIN = -0.6, YMAX = 1;
+  function sx(p) { return X0 + p * (X1 - X0); }
+  function sy(v) { return Y1 - (v - YMIN) / (YMAX - YMIN) * (Y1 - Y0); }
+
+  var chart = document.getElementById("chart");
+  var wrap = document.getElementById("chartWrap");
+  var tip = document.getElementById("tip");
+
+  function lineD(fn) {
+    var d = "";
+    for (var i = 0; i <= 100; i++) {
+      var p = i / 100;
+      d += (i ? "L" : "M") + sx(p).toFixed(1) + "," + sy(fn(p)).toFixed(1);
+    }
+    return d;
+  }
+  function drawChart() {
+    chart.replaceChildren();
+    var yt = [-0.5, 0, 0.5, 1];
+    yt.forEach(function (v) {
+      el("line", { x1: X0, x2: X1, y1: sy(v), y2: sy(v), stroke: v === 0 ? "#474747" : "#303030", "stroke-width": 1 }, chart);
+      var t = el("text", { x: X0 - 10, y: sy(v) + 4, "text-anchor": "end" }, chart);
+      t.textContent = (v < 0 ? "−" : "") + Math.abs(v * 100) + " %";
+    });
+    [0, 0.2, 0.4, 0.6, 0.8, 1].forEach(function (p) {
+      el("line", { x1: sx(p), x2: sx(p), y1: Y1, y2: Y1 + 5, stroke: "#474747", "stroke-width": 1 }, chart);
+      var t = el("text", { x: sx(p), y: Y1 + 20, "text-anchor": "middle" }, chart);
+      t.textContent = Math.round(p * 100) + " %";
+    });
+    var xt = el("text", { x: (X0 + X1) / 2, y: H - 8, "text-anchor": "middle" }, chart);
+    xt.textContent = "Part des tâches que Flash réussit (p)";
+    var yt2 = el("text", { x: X0, y: 14 }, chart);
+    yt2.textContent = "Économie par tâche, comparée à Opus seul";
+
+    el("path", { d: lineD(function (p) { return save(p, st.r, st.s); }), fill: "none", stroke: "#e76624", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, chart);
+    el("path", { d: lineD(function (p) { return save(p, st.r, 0); }), fill: "none", stroke: "#338ced", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, chart);
+
+    /* point du pilote */
+    var pp = PILOT, pv = save(pp, st.r, 0);
+    el("circle", { cx: sx(pp), cy: sy(pv), r: 4.5, fill: "#338ced", stroke: "#191919", "stroke-width": 2 }, chart);
+    var pl = el("text", { x: sx(pp) + 10, y: sy(pv) + 22, class: "lbl" }, chart);
+    pl.textContent = "Pilote 4/15";
+
+    /* réglage courant */
+    var cx = sx(st.p), cv = save(st.p, st.r, st.s);
+    el("line", { x1: cx, x2: cx, y1: Y0, y2: Y1, stroke: "#9c9c9c", "stroke-width": 1, opacity: 0.6 }, chart);
+    el("circle", { cx: cx, cy: sy(cv), r: 5, fill: st.s > 0 ? "#e76624" : "#338ced", stroke: "#191919", "stroke-width": 2 }, chart);
+    var rl = el("text", { x: cx + (st.p > 0.7 ? -8 : 8), y: Y0 + 12, class: "lbl", "text-anchor": st.p > 0.7 ? "end" : "start" }, chart);
+    rl.textContent = "Réglage : " + fr(st.p * 100, 1) + " %";
+
+    /* survol */
+    var hl = el("line", { id: "hair", x1: 0, x2: 0, y1: Y0, y2: Y1, stroke: "#efefef", "stroke-width": 1, opacity: 0, "pointer-events": "none" }, chart);
+    var ov = el("rect", { x: X0, y: Y0, width: X1 - X0, height: Y1 - Y0, fill: "transparent" }, chart);
+    function showAt(p) {
+      p = clamp(Math.round(p * 100) / 100, 0, 1);
+      st.hp = p;
+      hl.setAttribute("x1", sx(p)); hl.setAttribute("x2", sx(p)); hl.setAttribute("opacity", 0.5);
+      var rows = [{ color: "#338ced", value: pct(save(p, st.r, 0), 1), name: "sans surcoût" }];
+      if (st.s > 0) { rows.push({ color: "#e76624", value: pct(save(p, st.r, st.s), 1), name: "surcoût +" + Math.round(st.s * 100) + " %" }); }
+      tipRows(tip, "p = " + pct(p, 0), rows);
+      var rect = chart.getBoundingClientRect();
+      placeTip(tip, wrap, sx(p) / W * rect.width);
+    }
+    function hide() { st.hp = null; hl.setAttribute("opacity", 0); tip.hidden = true; }
+    ov.addEventListener("pointermove", function (e) {
+      var rect = chart.getBoundingClientRect();
+      var xv = (e.clientX - rect.left) / rect.width * W;
+      showAt((xv - X0) / (X1 - X0));
+    });
+    ov.addEventListener("pointerleave", hide);
+    wrap.onkeydown = function (e) {
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        e.preventDefault();
+        var base = st.hp === null ? st.p : st.hp;
+        showAt(base + (e.key === "ArrowRight" ? 0.05 : -0.05));
+      } else if (e.key === "Escape") { hide(); }
+    };
+    wrap.onblur = hide;
+    chart.setAttribute("aria-label", "Économie de la cascade selon le taux de réussite de Flash. Au réglage actuel, p = " + fr(st.p * 100, 1) + " %, l'économie est de " + fr(cv * 100, 1) + " %.");
+  }
+
+  function drawLegend() {
+    var lg = document.getElementById("legend");
+    lg.replaceChildren();
+    function add(color, text, dot) {
+      var s = document.createElement("span");
+      var k = document.createElement(dot ? "em" : "i");
+      if (!dot) { k.style.background = color; }
+      s.append(k, document.createTextNode(text)); lg.appendChild(s);
+    }
+    add("#338ced", "Cascade sans surcoût d'escalade");
+    add("#e76624", "Cascade avec surcoût +" + Math.round(st.s * 100) + " %");
+    add("#338ced", "Pilote VentureBeat, 4/15", true);
+  }
+
+  function drawTable() {
+    var w = document.getElementById("tblWrap");
+    var rows = [0, 0.1, 0.2, PILOT, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
+    var t = document.createElement("table");
+    var cap = document.createElement("caption"); cap.className = "sr-only"; cap.textContent = "Économie par tâche selon le taux de réussite de Flash"; t.appendChild(cap);
+    var hr = document.createElement("tr");
+    ["Taux de réussite p", "Sans surcoût", "Surcoût +" + Math.round(st.s * 100) + " %"].forEach(function (x) {
+      var th = document.createElement("th"); th.scope = "col"; th.textContent = x; hr.appendChild(th);
+    });
+    t.appendChild(hr);
+    rows.forEach(function (p) {
+      var tr = document.createElement("tr");
+      var pilot = Math.abs(p - PILOT) < 1e-9;
+      if (pilot) { tr.className = "hl"; }
+      [pilot ? "26,7 % (pilote 4/15)" : pct(p, 0), pct(save(p, st.r, 0), 1), pct(save(p, st.r, st.s), 1)].forEach(function (x) {
+        var td = document.createElement("td"); td.textContent = x; tr.appendChild(td);
+      });
+      t.appendChild(tr);
+    });
+    w.replaceChildren(t);
+  }
+
+  function render() {
+    st.p = parseFloat(inP.value) / 100; st.r = parseFloat(inR.value); st.s = parseFloat(inS.value) / 100;
+    document.getElementById("outP").textContent = fr(st.p * 100, 1) + " %";
+    document.getElementById("outR").textContent = Math.round(st.r) + "×";
+    document.getElementById("outS").textContent = "+" + Math.round(st.s * 100) + " %";
+    var sv = save(st.p, st.r, st.s);
+    var cf = CO / st.r;
+    var cost = cf + (1 - st.p) * CO * (1 + st.s);
+    document.getElementById("oSave").textContent = pct(sv, 1);
+    document.getElementById("oCost").textContent = usd(cost);
+    document.getElementById("oBase").textContent = "Opus seul : " + usd(CO);
+    var capv = st.p - (1 - st.p) * st.s;
+    document.getElementById("oCap").textContent = pct(capv, 1);
+    document.getElementById("chartNote").textContent = "À p = " + pct(st.p, 1) + ", même un modèle gratuit ne ferait pas mieux que " + pct(capv, 1) + " d'économie. Le surcoût d'escalade fait passer la cascade sous Opus seul quand p est faible.";
+    document.querySelectorAll(".presets .btn").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(Math.abs(parseFloat(b.dataset.p) - parseFloat(inP.value)) < 0.05));
+    });
+    drawLegend(); drawChart(); drawTable();
+  }
+  [inP, inR, inS].forEach(function (i) { i.addEventListener("input", render); });
+  document.querySelectorAll(".presets .btn").forEach(function (b) {
+    b.addEventListener("click", function () { inP.value = b.dataset.p; render(); });
+  });
+  var tblBtn = document.getElementById("tblBtn"), tblWrap = document.getElementById("tblWrap");
+  tblBtn.addEventListener("click", function () {
+    var open = tblBtn.getAttribute("aria-pressed") === "true";
+    tblBtn.setAttribute("aria-pressed", String(!open));
+    tblWrap.hidden = open;
+    tblBtn.textContent = open ? "Afficher le tableau" : "Masquer le tableau";
+  });
+  render();
+
+  /* ---------- graphique du cache ---------- */
+  (function () {
+    var svg = document.getElementById("cacheChart"), cw = document.getElementById("cacheWrap"), tp = document.getElementById("tip2");
+    var CW = 760, L = 270, R = 700, top = 18, rowH = 54, bh = 22;
+    var data = [
+      { n: "Dans un même tour", v: 0.90, c: "#6b6b6b" },
+      { n: "Entre deux tours, même modèle", v: 0.55, c: "#6b6b6b" },
+      { n: "Après un changement de modèle", v: 0.08, c: "#338ced" }
+    ];
+    function x(v) { return L + v * (R - L); }
+    [0, 0.25, 0.5, 0.75, 1].forEach(function (v) {
+      el("line", { x1: x(v), x2: x(v), y1: top - 6, y2: top + rowH * 3 - 14, stroke: v === 0 ? "#474747" : "#303030", "stroke-width": 1 }, svg);
+      var t = el("text", { x: x(v), y: top + rowH * 3 + 2, "text-anchor": "middle", fill: "#9c9c9c", "font-size": 12 }, svg);
+      t.textContent = Math.round(v * 100) + " %";
+    });
+    data.forEach(function (d, i) {
+      var y = top + i * rowH, w = d.v * (R - L), r = 4;
+      var lb = el("text", { x: L - 14, y: y + bh / 2 + 4, "text-anchor": "end", fill: "#9c9c9c", "font-size": 13 }, svg);
+      lb.textContent = d.n;
+      el("path", { d: "M" + L + "," + y + " h" + (w - r) + " a" + r + "," + r + " 0 0 1 " + r + "," + r + " v" + (bh - 2 * r) + " a" + r + "," + r + " 0 0 1 -" + r + "," + r + " h-" + (w - r) + " z", fill: d.c }, svg);
+      var vl = el("text", { x: L + w + 10, y: y + bh / 2 + 5, fill: "#efefef", "font-size": 14, "font-weight": 600 }, svg);
+      vl.textContent = Math.round(d.v * 100) + " %";
+      var hit = el("rect", { x: 0, y: y - 12, width: CW, height: rowH - 4, fill: "transparent", tabindex: 0, "aria-label": d.n + " : " + Math.round(d.v * 100) + " %" }, svg);
+      function show() {
+        tipRows(tp, d.n, [{ color: d.c, value: Math.round(d.v * 100) + " %", name: "cache-hit" }]);
+        var rect = svg.getBoundingClientRect();
+        placeTip(tp, cw, (L + w) / CW * rect.width);
+        tp.style.top = ((y + bh + 4) / 210 * rect.height) + "px";
+      }
+      hit.addEventListener("pointermove", show);
+      hit.addEventListener("focus", show);
+      hit.addEventListener("pointerleave", function () { tp.hidden = true; });
+      hit.addEventListener("blur", function () { tp.hidden = true; });
+    });
+  })();
+})();
+</script>
+</body>
+</html>
